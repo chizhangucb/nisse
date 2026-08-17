@@ -1,0 +1,8 @@
+# About the team
+
+> Fill-in template. One row per person you work with regularly. The wiki's proper-noun resolution reads this table (see `wiki/rules.md`), so keeping it current makes transcripts resolve to the right people.
+
+| Name | Role | Notes (timezone, channel, quirks) |
+|---|---|---|
+| (example) Sam Rivera | contract designer | PST, prefers async Figma comments |
+| (example) Priya Patel | first engineer | CET, owns the CI pipeline |

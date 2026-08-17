@@ -1,0 +1,6 @@
+# ASR artifacts that look like proper nouns and are not.
+# A name listed here never resolves to a person.
+# Format: the misheard text, an arrow, what it actually was.
+not_names:
+  - "\"crawl code\" / \"cloud code\" -> Claude Code (example)"
+  - "\"grid hub\" / \"get hub\" -> GitHub (example)"

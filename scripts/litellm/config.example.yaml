@@ -1,0 +1,41 @@
+# LiteLLM spine, example config. Brain = governance/routing.md; this file is
+# the limb: it enforces what the roster decides, it does not decide.
+# Loopback only (run with --host 127.0.0.1). No DB overlay, so this file is
+# authoritative and diffs in git.
+#
+# Every OpenRouter deployment carries provider.data_collection: deny, the
+# no-train hard filter (routing.md, confidentiality posture). allow_fallbacks
+# lets an unavailable no-train host fall through to ANOTHER no-train host.
+
+model_list:
+  # Passthrough for any OpenRouter model id, gated no-train.
+  - model_name: "openrouter/*"
+    litellm_params:
+      model: "openrouter/*"
+      api_key: os.environ/OPENROUTER_API_KEY
+      api_base: https://openrouter.ai/api/v1
+      extra_body:
+        provider:
+          data_collection: deny
+          allow_fallbacks: true
+
+  # Short-name alias example. Add one per roster row in governance/routing.md;
+  # a model enters here only after you added it there with a tier and trust.
+  - model_name: my-workhorse
+    litellm_params:
+      model: openrouter/<vendor>/<model>
+      api_key: os.environ/OPENROUTER_API_KEY
+      api_base: https://openrouter.ai/api/v1
+      extra_body:
+        provider:
+          data_collection: deny
+          allow_fallbacks: true
+
+litellm_settings:
+  drop_params: true
+
+general_settings:
+  # Deterministic auth via a master key (env ref, never inlined; value lives in
+  # your canonical secrets store per governance/secrets.md). Keyless + no DB
+  # makes LiteLLM error on client probe requests, so keep the key.
+  master_key: os.environ/LITELLM_MASTER_KEY

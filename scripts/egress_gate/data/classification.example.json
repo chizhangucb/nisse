@@ -1,0 +1,19 @@
+{
+  "_comment": "Copy to classification.json and make it yours. verbs: posture is auto | ask | confirm-always | conditioned-auto (git push only). exec: the real argv the verb expands to (args appended). push_pins: repo folder name -> the owner/repo (or host) substring the origin URL must contain for conditioned-auto; '*' is the fallback pin.",
+  "verbs": {
+    "git push": {
+      "class": "send",
+      "posture": "ask",
+      "_note": "flip to conditioned-auto once the pin below is set and you trust the marker list"
+    },
+    "tracker-ping": {
+      "class": "send",
+      "posture": "auto",
+      "exec": ["echo", "[tracker-ping]"],
+      "_note": "replace exec with your own notification command (e.g. a Telegram bot script); a narrow reaches-only-you verb is the one safe always-allow"
+    }
+  },
+  "push_pins": {
+    "*": ""
+  }
+}
