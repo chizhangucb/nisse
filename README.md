@@ -60,6 +60,14 @@ Everything ships in the repo. Tiers are about dependencies, not importance.
 
 This repo is designed to hold your real life: decisions, meetings, money, people. Treat the private instance you build from it as private infrastructure. `governance/confidentiality.md` is the template for what never leaves, and the wiki routes anything sensitive to `wiki/confidential/` by default. Fill those in before you feed the system anything real.
 
+## Family
+
+nisse is one of three local-first tools that work on their own and know about each other:
+
+- **nisse** is the repo your assistant lives in: taxonomy, governance, records.
+- **[Chronicle](https://github.com/chizhangucb/chronicle)** answers what happened in a session, in depth.
+- **[Varde](https://github.com/chizhangucb/varde)** is an operator console over your whole AI stack: spend, permissions, and what needs your eyes today. It reads a nisse-shaped repo for the authority picture: egress policy, kill switch, decisions and the routing roster.
+
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE).
