@@ -21,7 +21,7 @@ The canonical human-readable list of optional integrations (tier 2). Each bolts 
 | Fireflies | pull meeting transcripts straight into wiki ingest | `FIREFLIES_API_KEY` | key from fireflies.ai settings; test with the wiki-ingest skill |
 | Plaud | pull voice-capture notes into wiki ingest | (MCP auth) | connect the Plaud MCP in your harness config |
 | AssemblyAI | re-transcribe garbled captures | `ASSEMBLYAI_API_KEY` | key from assemblyai.com; used by the retranscribe script |
-| Linear | daily ticket-tracker drift sweep (`governance/ticket-tracker.md`) | `LINEAR_API_KEY` | personal API key, user scope; enable the sweep in the hygiene config |
+| Linear | daily ticket-tracker drift sweep (`governance/ticket-tracker.md`, `scripts/ticket_tracker.py`) | `LINEAR_API_KEY`, `TICKET_TRACKER_PROJECTS`, `TICKET_TRACKER_KEY_PREFIX` | personal API key, user scope; set `TICKET_TRACKER_PROJECTS` to your board name(s) and `NISSE_TRACKER_DRIFT=1` to enable the hygiene tracker checks (group 7) |
 
 ## Scheduled tasks
 
@@ -29,6 +29,8 @@ The single registry of everything that runs unattended. Adding, changing, or ret
 
 | Job | Schedule | Max staleness | Runner | Last run | What it does |
 |---|---|---|---|---|---|
+
+**Worked example (dormant, not installed):** `scripts/daily_maintenance.py` shows the pattern for merging several morning checks (hygiene scan, tracker-drift sweep) into one digest sent through a single gated notification path, instead of one job per check. It is not scheduled anywhere and adds no row above; wiring it up means copying `scripts/templates/com.example.daily-maintenance.plist.template` (launchd) or the crontab line documented in that file, filling in your own paths, and adding the row yourself once it actually runs unattended.
 
 **Drift principle:** each job should stamp a heartbeat; a daily check flags any job over its staleness threshold. Silence from a job that reports daily means the job broke, not that all is well.
 
