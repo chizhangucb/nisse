@@ -18,11 +18,8 @@ How skills get built and written in this repo. Applies to skills and to editing 
 
 ## Length and sediment
 
-Applies to every operating doc: skills, rules files, `wiki/CLAUDE.md`, `wiki/rules.md`.
-
 - Word budget: every SKILL.md stays under ~500 words (`wc -w`, frontmatter included). Over budget means move content out (templates, scripts, references, a shared rules file) or delete it, not tolerate it. The hygiene checker flags violations.
-- Lessons enter as rules, never as stories. A new rule enters an operating doc as the imperative only, plus at most a one-clause pointer to `records/decisions.md`; the story (incident, alternatives, dates) goes to the log in the same session. Test each sentence: if deleting it would not change behavior on the next run, delete it whole.
-- Never restate a file the skill already says to read. One binding source; the skill points, it does not mirror.
+- Rules-not-stories and one-binding-source bind here as everywhere: `building.md` (Operating docs).
 
 ## Review by blast radius
 
