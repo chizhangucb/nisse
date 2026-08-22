@@ -13,6 +13,20 @@ General build discipline. Binds every agent doing non-trivial build or research 
 
 - Every design or architecture proposal states run cost: how often it runs, rough tokens per run, which model. Default to the cheapest shape that meets the quality bar: deterministic code, then one-shot small model, then one-shot big model, then agentic session. Agentic plus a big model needs explicit justification in the plan.
 
+## Headless runs
+
+Machine (headless) model spawns must not pollute a repo's interactive session data.
+
+- A spawn that does not write into a repo runs from a dedicated scratch cwd, never a real repo, so its transcript lands in its own projects folder and never counts as interactive work. Reap the scratch transcripts if the spawn recurs.
+- A spawn that must write into a repo keeps cwd=repo: its permission allowlist and prompts are cwd-relative, and moving cwd would break the relative Edit-deny globs that protect the repo's own machinery. Do not delete its transcript to hide it, that erases real spend; usage accounting should bucket it as automation, not hide it.
+
+## Operating docs
+
+Applies to every operating doc: governance files, rules files, `wiki/CLAUDE.md`, `wiki/rules.md`, skills and their `references/` rules files.
+
+- Lessons enter as rules, never as stories. A new rule enters an operating doc as the imperative only, load-bearing wording verbatim, plus at most a one-clause pointer to `records/decisions.md`; the story (incident, alternatives, dates) goes to the log in the same session. Test each sentence: if deleting it would not change behavior on the next run, delete it whole.
+- Never restate a file the doc already says to read. One binding source; the doc points, it does not mirror.
+
 ## Validation
 
 - Validate load-bearing technical claims (agent capabilities, model behavior, API terms, vendor data policies) against official or primary docs before relying on them. Third-party course, marketing, or secondhand claims are leads to verify, not facts.

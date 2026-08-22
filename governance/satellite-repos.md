@@ -13,14 +13,16 @@ Project = unit of intent; its hub folder (`projects/<name>/`) is the memory home
 ## Boundary invariants
 
 - Satellite runtime code reads the hub read-only.
-- Agent sessions may write exactly one hub surface, `records/`, by absolute path.
+- Agent sessions may write exactly two hub surfaces, by absolute path: `records/` (the 4 streams) and `plans/workstate/` (live per-task workstate; hub-only for every satellite, never satellite-local, `repo-contract.md` "One memory home per project").
 - No cross-boundary imports, either direction. CLI invocation of read-only hub tools is allowed.
 - Helpers duplicate freely; extract to a versioned package only after double-fix pain.
 - Confidential: sessions read anything; nothing confidential lands in satellite files, fixtures, or commits. Runtime inclusion of confidential paths is per-satellite, owner-approved, via a separate gitignored projection, loud when on.
 
 ## Records seam
 
-Decisions go to the top of hub `records/decisions.md` with `(session <id>, stream: <name>)`; brainstorms to hub `records/brainstorms/`. The session row is appended to hub `records/sessions_index.md` by the registry-scoped Stop hook: it fires in the hub cwd and every registered satellite cwd, resolves the hub via `AIOS_HUB`, matches cwd to a `## Satellites` row, and writes the row there. The Repo column carries the satellite repo name (hub sessions write `hub`).
+Decisions go to the top of hub `records/decisions.md` with `(session <id>, stream: <name>)`, logged in-flow; brainstorms to hub `records/brainstorms/`. Session rows in `records/sessions_index.md` are written by the Stop hook; Repo column = satellite repo name, hub sessions write `hub`.
+
+Do not fill `(pending)` focus lines manually; the session-close sweeper owns that.
 
 Hook registration template: every satellite carries the hub's hook block in its tracked `.claude/settings.json` (one template, no per-repo drift; hub path resolves via `AIOS_HUB`). The template ships with the hooks in this repo's `.claude/`.
 
