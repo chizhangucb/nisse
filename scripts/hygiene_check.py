@@ -41,6 +41,7 @@ DECISION_LOG_ARCHIVE_WORDS = 12000
 DECISION_LINE_WORDS = 30     # one-line decision format cap; WARN only
 RECORDS_SPLIT_WORDS = 10000  # per-stream split trigger for a records file
 REFERENCE_STALE_DAYS = 90    # references/*.md archive-candidate age
+LESSON_ENTRY_WORDS = 150     # per-entry cap in governance/lessons.md ## Entries
 
 # word budgets by doc, exact path first, then class rules
 BUDGET_EXACT = {
@@ -54,6 +55,9 @@ BUDGET_EXACT = {
     "governance/routing.md": 1000,
     "governance/building.md": 750,
     "governance/satellite-repos.md": 700,
+    "governance/lessons.md": 2000,       # capped domain-less catch-all
+    "governance/memory-promotion.md": 1000,  # capture-to-promote pipeline policy
+    "governance/design-rubric.md": 700,      # UI/design readability rubric
 }
 BUDGET_SATELLITE_CLAUDE = 1200  # a satellite CLAUDE.md is a map
 BUDGET_SKILL = 500           # any skills/*/SKILL.md
@@ -312,6 +316,7 @@ def check_docs():
                 f"over budget: {wc}w > {budget}w", r)
 
     _check_decision_log()
+    _check_lessons_file()
     _check_observed_dates()
     _check_satellites()
     _check_records_split()
@@ -362,6 +367,40 @@ def _check_decision_log():
             add("MED", "judgment", "doc-health",
                 f"decision line over budget ({len(s.split())}w > "
                 f"{DECISION_LINE_WORDS}w): {s[:55]}...", rel(log))
+
+
+def _check_lessons_file():
+    """Each ### entry under governance/lessons.md's ## Entries section is
+    <=150 words and carries a provenance link. Policy prose above ## Entries is
+    never an entry, so it is never flagged."""
+    path = os.path.join(ROOT, "governance", "lessons.md")
+    text = read_text(path)
+    if text is None:
+        return
+    # the ## Entries span: from that heading to the next h1/h2, keeping ### entries
+    m = re.search(r"(?m)^##\s+Entries\s*$", text)
+    if not m:
+        return
+    rest = text[m.end():]
+    nxt = re.search(r"(?m)^#{1,2} ", rest)
+    entries_body = rest[:nxt.start()] if nxt else rest
+    if not entries_body.strip():
+        return
+    # split into ### blocks; the text before the first ### is not an entry
+    parts = re.split(r"(?m)^###\s+(.+)$", entries_body)
+    # parts = [pre, head1, body1, head2, body2, ...]
+    for i in range(1, len(parts), 2):
+        head = parts[i].strip()
+        body = parts[i + 1] if i + 1 < len(parts) else ""
+        wc = len(body.split())
+        if wc > LESSON_ENTRY_WORDS:
+            add("MED", "judgment", "doc-health",
+                f"lesson entry over budget ({wc}w > {LESSON_ENTRY_WORDS}w): "
+                f"{head[:50]}", "governance/lessons.md")
+        if not LINK_RE.search(body):
+            add("MED", "judgment", "doc-health",
+                f"lesson entry missing a provenance link: {head[:50]}",
+                "governance/lessons.md")
 
 
 OBSERVED_RE = re.compile(r"observed\s+(\d{4})-(\d{2})", re.IGNORECASE)

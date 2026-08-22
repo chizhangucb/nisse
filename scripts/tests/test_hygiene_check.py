@@ -3,7 +3,9 @@
 Run from the repo root: python3 -m pytest scripts/tests/ (or unittest).
 """
 import os
+import shutil
 import sys
+import tempfile
 import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -28,9 +30,65 @@ class TestBudgetFor(unittest.TestCase):
         self.assertEqual(hc._budget_for("governance/secrets.md"), 500)
         self.assertEqual(hc._budget_for("governance/gating.md"), 1150)
 
+    def test_lessons_exact_budget(self):
+        # governance/lessons.md is exact-capped, not the governance/ default
+        self.assertEqual(hc._budget_for("governance/lessons.md"), 2000)
+
     def test_uncapped(self):
         self.assertIsNone(hc._budget_for("records/decisions.md"))
         self.assertIsNone(hc._budget_for("references/templates/x.md"))
+
+
+class TestLessonsFileCheck(unittest.TestCase):
+    """governance/lessons.md ## Entries: each ### entry <=150 words and carries
+    a provenance link. Policy prose above ## Entries is never an entry."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix="hygiene_lessons_test_")
+        self._old_root = hc.ROOT
+        hc.ROOT = self.tmp
+        hc.findings.clear()
+
+    def tearDown(self):
+        hc.ROOT = self._old_root
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def _write_lessons(self, text):
+        path = os.path.join(self.tmp, "governance", "lessons.md")
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(text)
+
+    def _messages(self):
+        return [f[3] for f in hc.findings]
+
+    def test_over_budget_and_missing_link_flagged(self):
+        good = ("### Ship it\n\nAlways do the thing.\n\n"
+                "Why: it works.\nProvenance: [decision](records/decisions.md)\n")
+        over = ("### Too long\n\n" + ("word " * 200)
+                + "\nProvenance: [x](records/decisions.md)\n")
+        noprov = "### No link\n\nDo the thing.\nWhy: reasons.\n"
+        self._write_lessons(
+            "# Lessons\n\n## Rules\n\n- policy prose, not an entry, "
+            + ("word " * 200) + "\n\n## Entries\n\n"
+            + good + "\n" + over + "\n" + noprov)
+        hc._check_lessons_file()
+        msgs = self._messages()
+        self.assertTrue(any("lesson entry over budget" in m and "Too long" in m
+                            for m in msgs), msgs)
+        self.assertFalse(any("lesson entry over budget" in m and "Ship it" in m
+                             for m in msgs), msgs)
+        # policy prose over 150w under ## Rules is not an entry, never flagged
+        self.assertFalse(any("lesson entry over budget" in m and "Rules" in m
+                             for m in msgs), msgs)
+        self.assertTrue(any("missing a provenance link" in m and "No link" in m
+                            for m in msgs), msgs)
+        self.assertFalse(any("missing a provenance link" in m and "Ship it" in m
+                             for m in msgs), msgs)
+
+    def test_missing_file_is_a_noop(self):
+        hc._check_lessons_file()
+        self.assertEqual(self._messages(), [])
 
 
 class TestParsers(unittest.TestCase):

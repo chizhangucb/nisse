@@ -794,29 +794,72 @@ def _write_last_run(hub, summary):
         json.dump(summary, f, indent=2)
 
 
-def _self_commit_records(hub, dry_run=False):
-    """Commit just the two record streams. Scoped, commit-only, idempotent,
-    best-effort.
+LEDGER_REF = "refs/ledger/checkpoints"
+LEDGER_PATHS = ["records/sessions_index.md", "records/decisions.md"]
 
-    Closes the uncommitted-window hole where a stale git blob replay could
-    clobber a long-uncommitted ledger. Scoped by pathspec, never `git add -A`;
-    commit only, never push (push is gated); a no-op when the paths are clean;
-    swallows every git error (a sandboxed spawn may not be able to commit and
-    the next sweep gets it)."""
-    paths = ["records/sessions_index.md", "records/decisions.md"]
+
+def _checkpoint_ledger(hub, dry_run=False):
+    """Snapshot the two record streams onto a dedicated ref, off `main`.
+
+    Durability without polluting `main`'s linear history. The periodic sweep is
+    the checkpoint home: it closes the uncommitted-window hole where a stale git
+    blob replay could clobber a long-uncommitted ledger. We snapshot the two
+    files to `refs/ledger/checkpoints` using a throwaway index, so `main`/HEAD
+    and its index are never touched and `git log` stays clean. Recover a
+    clobbered file with `git cat-file blob refs/ledger/checkpoints:<path>`;
+    browse history with `git log refs/ledger/checkpoints`. Idempotent: a no-op
+    when the snapshot matches the last checkpoint. Best-effort: swallows every
+    git error, since a sandboxed spawn may not be able to write and the next
+    sweep gets it. Never pushes (the egress gate owns push)."""
+    if dry_run:
+        return
+    tmp_index = os.path.join(hub, ".git", "ledger-checkpoint.index")
+    env = dict(os.environ, GIT_INDEX_FILE=tmp_index)
+
+    def git(*args, use_index=False):
+        return subprocess.run(["git"] + list(args), cwd=hub,
+                              capture_output=True, text=True,
+                              env=env if use_index else None)
     try:
-        proc = subprocess.run(["git", "status", "--porcelain", "--"] + paths,
-                              cwd=hub, capture_output=True, text=True)
-        if proc.returncode != 0 or not proc.stdout.strip():
-            return  # git error, or nothing to commit
-        if dry_run:
+        if git("rev-parse", "--is-inside-work-tree").returncode != 0:
+            return  # not a git work tree
+        present = [p for p in LEDGER_PATHS
+                   if os.path.exists(os.path.join(hub, p))]
+        if not present:
             return
-        subprocess.run(
-            ["git", "commit", "-m",
-             "records: periodic ledger + decisions self-commit", "--"] + paths,
-            cwd=hub, capture_output=True, text=True)
+        try:
+            os.remove(tmp_index)
+        except OSError:
+            pass
+        # Stage into a throwaway index so main's index and HEAD are untouched.
+        git("read-tree", "--empty", use_index=True)
+        if git("update-index", "--add", "--", *present,
+               use_index=True).returncode != 0:
+            return
+        tree = git("write-tree", use_index=True).stdout.strip()
+        if not tree:
+            return
+        parent = git("rev-parse", "--verify", "-q",
+                     LEDGER_REF + "^{commit}").stdout.strip()
+        if parent:
+            parent_tree = git("rev-parse", "--verify", "-q",
+                              parent + "^{tree}").stdout.strip()
+            if parent_tree == tree:
+                return  # no change since the last checkpoint
+        args = ["commit-tree", tree, "-m", "records: periodic ledger checkpoint"]
+        if parent:
+            args += ["-p", parent]
+        commit = git(*args, use_index=True).stdout.strip()
+        if not commit:
+            return
+        git("update-ref", LEDGER_REF, commit)
     except (OSError, subprocess.SubprocessError):
         pass
+    finally:
+        try:
+            os.remove(tmp_index)
+        except OSError:
+            pass
 
 
 def main(argv=None):
@@ -834,7 +877,7 @@ def main(argv=None):
         return 0
     try:
         sweep(hub, args.current, dry_run=args.dry_run)
-        _self_commit_records(hub, dry_run=args.dry_run)
+        _checkpoint_ledger(hub, dry_run=args.dry_run)
     finally:
         release_lock(hub)
     return 0

@@ -8,6 +8,12 @@
             "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-ledger.py\" 2>/dev/null || true",
             "timeout": 10,
             "statusMessage": "Updating session ledger"
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/decision-log.py\" 2>/dev/null || true",
+            "timeout": 10,
+            "statusMessage": "Consolidating decision log"
           }
         ]
       }
