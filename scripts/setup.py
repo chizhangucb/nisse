@@ -15,7 +15,6 @@ to customize by hand (start with governance/README.md).
 """
 import os
 import shutil
-import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

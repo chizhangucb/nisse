@@ -14,8 +14,6 @@ where tag is `auto-safe` (zero-risk cleanup) or `judgment` (needs a call).
 Run from the repo root:  python3 scripts/hygiene_check.py
 Override the scanned root with $HYGIENE_ROOT or main(root=...).
 """
-import glob
-import json
 import os
 import re
 import subprocess
@@ -413,7 +411,8 @@ def _check_observed_dates():
         r = rel(p)
         if not r.endswith(".md"):
             continue
-        if not (r.startswith((".claude", "references", "skills")) or r == "operations.md"):
+        if not (r.startswith((".claude", "references", "skills"))
+                or r == "operations.md"):
             continue
         text = read_text(p)
         if text is None:

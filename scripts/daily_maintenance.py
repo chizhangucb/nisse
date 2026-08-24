@@ -38,8 +38,8 @@ import sys
 from datetime import date
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import hygiene_check  # noqa: E402  (imported, not subprocessed: it's a pure function)
 import ticket_tracker  # noqa: E402  (shared _send_ping)
-import hygiene_check    # noqa: E402  (imported, not subprocessed: it's a pure function)
 
 DIGEST_PATH = ".tmp/daily_maintenance/digest.md"
 DRIFT_FILE = ".tmp/tracker_drift/ping.md"
@@ -75,7 +75,8 @@ def stage_hygiene(root):
     something needs attention (HIGH/MED); a clean scan is silent."""
     s = Stage("hygiene")
     try:
-        findings = hygiene_check.run_checks(root)  # (severity, tag, group, message, path)
+        # each finding: (severity, tag, group, message, path)
+        findings = hygiene_check.run_checks(root)
         by_sev = {}
         for f in findings:
             by_sev[f[0]] = by_sev.get(f[0], 0) + 1

@@ -1,0 +1,53 @@
+# Gate `main` on tests, lint, and the confidentiality guard.
+#
+# nisse is stdlib-only Python; there is no build step and no browser. Each job
+# is a required status check on `main` (branch protection references the bare
+# job ids: test, lint, confidentiality). Keep the ids stable — renaming one
+# leaves a required check that never reports, and every PR then hangs.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pytest
+        run: python -m pip install --upgrade pip pytest
+      - name: Run tests
+        run: python -m pytest scripts/tests/ -q
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install ruff
+        run: python -m pip install --upgrade pip ruff
+      - name: Ruff
+        run: ruff check .
+
+  confidentiality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Confidentiality guard
+        run: python3 scripts/confidentiality_guard.py

@@ -29,9 +29,9 @@ Usage:
 Exit code 0 always; the verdict is in stdout (human) or --json (machine).
 """
 
+import json
 import re
 import sys
-import json
 
 # CJK Unified Ideographs (+ common extension A). Enough to count Han reliably.
 _HAN = re.compile(r"[㐀-䶿一-鿿]")
