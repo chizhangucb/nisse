@@ -1,5 +1,7 @@
 # nisse
 
+[![CI](https://github.com/chizhangucb/nisse/actions/workflows/ci.yml/badge.svg)](https://github.com/chizhangucb/nisse/actions/workflows/ci.yml)
+
 A starter kit for a personal AI operating system: a plain-files git repo your AI assistant lives in, with the folder taxonomy, written governance, append-only records, and knowledge loops to help you think, decide, and ship.
 
 The name: a nisse is the Scandinavian household gnome that quietly does the chores as long as you treat it well. Same deal here.
