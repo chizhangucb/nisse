@@ -12,3 +12,10 @@ Append-only record of decisions and why. Newest block at the TOP.
 Rotated history:
 (none yet; rotated months land in decisions_history/)
 <!-- /log-shards -->
+
+## 2026-08-24: nisse CI/PR posture — CI, confidentiality guard, PR flow, branch protection (session 36bc19ca, stream: hub)
+
+- **nisse moves to a PR-only flow: direct push to `main` is closed by branch protection (enforce_admins, required checks `test`/`lint`/`confidentiality`, PR required with 0 approvals, no force-push), mirroring chronicle.** Gives the hub the same server-side merge gate its satellites have. → plans/2026-08-24-chi-219-ci-pr-posture.md; CHI-219.
+- **CI is three required jobs on push+PR to `main`: pytest, ruff (scoped to `scripts/`, `.claude/` excluded), and a confidentiality guard.** Deterministic gate before merge; ruff config in `pyproject.toml`. → CHI-219.
+- **The confidentiality guard flags only absolute owner home paths (a `/Users/` or `/home/` prefix immediately followed by the username), never the bare public handle, and self-excludes the guard, its test, and plan/archive docs.** A naive prefix+username denylist false-positives on the public handle and the guard's own artifacts. → scripts/confidentiality_guard.py; CHI-219.
+- **`gh pr merge` is owned by GitHub branch protection, not the egress gate — the gate passes it through to the raw command.** Confirms the branch-protection-owns-merge posture; supersedes the CHI-229 catch-all reading. Push to `main` stays conditioned-auto against the nisse pin; tag/non-main refs card. → CHI-229; scripts/gating_policy.json push_pins.
