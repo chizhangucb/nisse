@@ -15,13 +15,18 @@ import sys, json, os
 
 
 def find_hub(cwd):
-    candidates = [cwd]
+    # AIOS_HUB, then this hook's own repo (__file__), then cwd LAST. cwd-last so a
+    # hub-shaped satellite (its own records/, e.g. nisse) running the hub's copy
+    # resolves to the REAL hub, not itself (CHI-289); a standalone clone still
+    # self-resolves via __file__.
+    candidates = []
     env = os.environ.get("AIOS_HUB")
     if env:
         candidates.append(os.path.expanduser(env))
     # This file lives at <hub>/.claude/hooks/, so its own repo is a candidate.
     candidates.append(os.path.dirname(os.path.dirname(os.path.dirname(
         os.path.abspath(__file__)))))
+    candidates.append(cwd)
     for c in candidates:
         if os.path.exists(os.path.join(c, "records", "sessions_index.md")):
             return c

@@ -18,15 +18,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-ledger.py\" 2>/dev/null || true",
+            "command": "python3 \"${AIOS_HUB:-$HOME/chizhang-2}/.claude/hooks/session-ledger.py\" 2>/dev/null || true",
             "timeout": 10,
-            "statusMessage": "Updating session ledger"
-          },
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/decision-log.py\" 2>/dev/null || true",
-            "timeout": 10,
-            "statusMessage": "Consolidating decision log"
+            "statusMessage": "Updating hub session ledger"
           }
         ]
       }
@@ -36,7 +30,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-close-spawn.py\" 2>/dev/null || true",
+            "command": "python3 \"${AIOS_HUB:-$HOME/chizhang-2}/.claude/hooks/session-close-spawn.py\" 2>/dev/null || true",
             "timeout": 10,
             "statusMessage": "Spawning session-close sweeper"
           },
@@ -60,7 +54,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-close-marker.py\" 2>/dev/null || true",
+            "command": "python3 \"${AIOS_HUB:-$HOME/chizhang-2}/.claude/hooks/session-close-marker.py\" 2>/dev/null || true",
             "timeout": 10,
             "statusMessage": "Marking session done"
           }
