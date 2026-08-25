@@ -28,3 +28,4 @@ wiki/raw/transcripts/*
 /graphify-out
 graphs/*/graphify-out/
 graphs/*/graphify-out
+.claude/worktrees/
