@@ -81,7 +81,7 @@ def reconcile_decisions(hub, dry_run):
             L.append_decision(hub, date=r["date"], title=r["title"],
                               session=r.get("session") or "legacy",
                               stream=r.get("stream") or "legacy",
-                              body=r["body"], dual_write_md=False)
+                              body=r["body"])
     return added, len(existing) + (0 if dry_run else len(added))
 
 
