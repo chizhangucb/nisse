@@ -28,8 +28,8 @@ concepts/       ideas, mechanisms, frameworks (common nouns)
 synthesis/      cross-source arguments, comparisons, open questions
 confidential/   your most sensitive knowledge pages (categories: governance/confidentiality.md)
 annex/          rotated evidence overflow from living pages, mirror-pathed
-metadata/       index.md, log.md, tag_registry.md, name_registry.md
-  index/        monthly source-index shards (sources-YYYY-MM.md, one line per meeting)
+metadata/       index.md, log.jsonl (+ log.md mirror), sources.jsonl, tag_registry.md, name_registry.md
+  index/        retired monthly source-index shards (sources-YYYY-MM.md; the live store is sources.jsonl)
 ```
 
 - Filenames `lowercase_with_underscores.md`. Living pages (entities, concepts, synthesis) carry no dates. Point-in-time records do: raw transcripts, brainstorms, and meeting source pages are `YYYY-MM-DD_<series_slug>.md`, source page slug identical to its raw file, series name not session topic (topics go in the index annotation). Non-meeting source pages get dateless topic slugs; clippings and documents keep original names.
@@ -39,7 +39,7 @@ metadata/       index.md, log.md, tag_registry.md, name_registry.md
 ## The Rules
 
 **Rule 1 - Never rewrite history, only append.**
-`raw/` read-only; `metadata/log.md` and `# Evidence` sections append-only. Pages get revised, but a contradicted claim is never silently overwritten: add a `> [!warning] Superseded` callout naming old claim, new claim, and source. Deleting any wiki page requires the owner's explicit confirmation.
+`raw/` read-only; the wiki log (`metadata/log.jsonl`, appended only via `python3 scripts/aios_ledger.py append-log ...`, a deny hook blocks raw edits) and `# Evidence` sections append-only. Pages get revised, but a contradicted claim is never silently overwritten: add a `> [!warning] Superseded` callout naming old claim, new claim, and source. Deleting any wiki page requires the owner's explicit confirmation.
 Living pages stay under ~2,000 words. Over budget, triage rolls the oldest folded Evidence (older than ~1 month, not inside an open block) to `annex/<same-subpath>.md`, leaving a dated pointer. Rotation, not deletion; triage owns it, distill never archives.
 
 **Rule 2 - Every page earns its links.**
@@ -112,7 +112,7 @@ confidential: [slug, slug]  # empty, or your lenses from governance/confidential
 
 ## Operations
 
-**`ingest <paths, URLs, or pasted text>` (skill: wiki-ingest).** Land sources: mirror to raw/, source page, index + log. No entity/concept writes; `distilled:` stays empty. Every meeting capture lands verbatim in `raw/transcripts/` (gitignored); source pages are earned (full page vs an index ledger line for low-signal captures).
+**`ingest <paths, URLs, or pasted text>` (skill: wiki-ingest).** Land sources: mirror to raw/, source page, and append to `metadata/sources.jsonl` + `metadata/log.jsonl` (via `aios_ledger.py append-source` / `append-log`; a deny hook blocks raw edits). No entity/concept writes; `distilled:` stays empty. Every meeting capture lands verbatim in `raw/transcripts/` (gitignored); source pages are earned (full page vs an index ledger line for low-signal captures).
 
 **`distill [<source> ... | pending]` (skill: wiki-distill).** Mine undistilled source pages into `# Evidence` appends, one checkpoint with the owner before writing. Never touches `# Current truth` (Rule 6).
 

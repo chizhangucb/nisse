@@ -11,9 +11,11 @@ node_modules/
 # harness runtime state (hook markers, locks)
 .claude/state/
 
-# session-ledger cross-process lock + transient write file
+# session-ledger cross-process lock + transient write files
 records/.sessions_index.lock
 records/sessions_index.md.tmp
+records/*.jsonl.tmp
+wiki/metadata/*.jsonl.tmp
 
 # scratch and one-off files
 .tmp/

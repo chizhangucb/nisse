@@ -18,7 +18,7 @@ What's inside:
 
 - **A folder taxonomy with a contract.** Every folder has a stated purpose, lifecycle, and enforcer (`governance/repo-contract.md`). Your assistant always knows where a thing lives and when it dies or archives.
 - **Governance as files.** How the assistant writes for you, what it may do freely vs. confirm first, what never leaves the repo, how builds run. The assistant reads these every session; you edit them like code.
-- **Append-only records.** Decisions with their why, a one-row-per-session ledger, brainstorms, recurring reports. Your history stays greppable forever.
+- **Append-only records.** Decisions with their why, a one-row-per-session ledger, brainstorms, recurring reports. The structured ledgers are append-only JSONL written through one locked command (`scripts/aios_ledger.py`), with a deny hook blocking raw edits, so your history stays greppable and uncorrupted forever.
 - **A wiki knowledge loop.** Paste a meeting transcript or a note; ingest lands it as a source page, distill extracts evidence onto entity and concept pages, triage promotes evidence into current truth with your yes. Runs entirely on the host agent: zero API keys.
 - **Hooks and a hygiene checker** that keep the ledger written and the structure from rotting.
 
