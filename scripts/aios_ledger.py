@@ -350,18 +350,17 @@ class _SessionsLock:
 
 
 def read_sessions(hub):
-    """Current session rows, newest-first by stamp (the ledger's contract)."""
+    """Current session rows, newest-first by stamp (the read-time view contract;
+    the FILE itself is stored oldest-first, see _write_sessions)."""
     rows = read_rows(hub_path(hub, SESSIONS_JSONL))
-    return _sort_sessions(rows)
+    return sorted(rows, key=_session_key, reverse=True)
 
 
-def _sort_sessions(rows):
-    def key(r):
-        try:
-            return datetime.datetime.strptime(r.get("stamp", ""), "%Y-%m-%d %H%M")
-        except ValueError:
-            return datetime.datetime.min
-    return sorted(rows, key=key, reverse=True)
+def _session_key(r):
+    try:
+        return datetime.datetime.strptime(r.get("stamp", ""), "%Y-%m-%d %H%M")
+    except ValueError:
+        return datetime.datetime.min
 
 
 def session_ids(hub):
@@ -383,12 +382,17 @@ def _cap_focus(text):
 
 def _write_sessions(hub, rows):
     """Atomic replace of the whole store (temp + os.replace). Caller holds the
-    lock; this only guards against a concurrent reader seeing a torn file."""
+    lock; this only guards against a concurrent reader seeing a torn file.
+
+    Written OLDEST-first (newest row at the bottom) so the append mechanism is
+    consistent with the true append-logs decisions/log/sources: a new session's
+    row always lands at the end of the file, never the top. The newest-first
+    ordering readers want is a read-time view (read_sessions)."""
     path = hub_path(hub, SESSIONS_JSONL)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
-        for r in _sort_sessions(rows):
+        for r in sorted(rows, key=_session_key):
             f.write(_dumps(r))
     os.replace(tmp, path)
 

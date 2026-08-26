@@ -83,6 +83,10 @@ _REDIRECT_RE = re.compile(r">>?\s*(?:['\"]?)([^\s'\"|;&<>()]+)")
 # vector this guard blocks.
 _MUTATOR_CMDS = {"sed", "tee", "dd", "truncate", "cp", "mv", "install",
                  "python", "python2", "python3", "perl", "ruby", "awk"}
+# The sanctioned writer + maintenance tools ARE the write path: a segment that
+# invokes one is always allowed, even when its args name a ledger file (an
+# append-decision whose body text mentions a ledger, a backfill/reconcile run).
+_SANCTIONED = ("aios_ledger.py", "ledger_backfill.py", "ledger_reconcile.py")
 
 
 def _bash_writes_ledger(command):
@@ -98,7 +102,9 @@ def _bash_writes_ledger(command):
     for seg in segments:
         for target in _REDIRECT_RE.findall(seg):
             if _basename_guarded(target):
-                return True
+                return True  # even a sanctioned command may not redirect ONTO a ledger
+        if any(s in seg for s in _SANCTIONED):
+            continue  # the sanctioned writer / maintenance tools
         toks = seg.split()
         if not toks:
             continue
