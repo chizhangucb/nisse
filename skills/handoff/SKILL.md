@@ -30,4 +30,4 @@ One file per task: `plans/workstate/YYYY-MM-DD-<ticket-or-slug>.md` in the task'
 | Task state (goal/done/next), artifacts by reference | A transcript dump or a summary of the whole chat |
 | In-repo plain markdown, agent-agnostic | Saved to an OS temp dir, or tied to one harness |
 
-Not `/wiki-ingest` (that lands sources into the wiki) and not a `records/decisions.md` write (decisions still get logged in-flow).
+Not `/wiki-ingest` (that lands sources into the wiki) and not a `records/decisions.jsonl` write (decisions still get logged in-flow).

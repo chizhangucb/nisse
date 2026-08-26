@@ -412,11 +412,11 @@ def run_checks(issues, git_window_text, recent_activity_text, decision_dates,
                 add("LOW", f"{ident} description references unknown ticket "
                            f"{ref}", ident)
 
-        # (f) decisions.md block naming the ticket newer than its last edit
+        # (f) decisions.jsonl block naming the ticket newer than its last edit
         upd = _updated_date(node)
         dec = decision_dates.get(ident)
         if upd and dec and dec > upd and stype not in ("completed", "canceled"):
-            add("LOW", f"{ident} has a decisions.md block dated {dec} newer "
+            add("LOW", f"{ident} has a decisions.jsonl block dated {dec} newer "
                        f"than its last edit {upd}; brief may be stale "
                        f"(updatedAt is coarser than description edits)", ident)
 

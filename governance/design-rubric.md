@@ -31,4 +31,4 @@ UI and design rules for every interface you build. On-demand: load before buildi
 
 ## Provenance
 
-Born from a real readability gate run against a live UI pass, where contrast discipline turned out to matter more than size. Log your own gate's outcome in `records/decisions.md` and the plan doc that drove it, then fold anything durable back into this file.
+Born from a real readability gate run against a live UI pass, where contrast discipline turned out to matter more than size. Log your own gate's outcome in `records/decisions.jsonl` and the plan doc that drove it, then fold anything durable back into this file.

@@ -11,9 +11,7 @@ What ships:
 - `setup.py`: first-run personalization + toolchain check.
 - `hygiene_check.py`: the deterministic workspace health scan (`/hygiene` drives confirm-to-fix). Config seam at the top of the file; tracker checks off by default.
 - `aios_ledger.py`: the single sanctioned writer + shared reader for the append-only JSONL ledgers (`records/decisions.jsonl`, `records/sessions.jsonl`, `wiki/metadata/log.jsonl`, `wiki/metadata/sources.jsonl`). One serialized writer under a lock; a deny hook (`.claude/hooks/ledger-guard.py`) blocks raw edits. Subcommands: `append-decision`, `append-log`, `append-source`, `upsert-session`.
-- `ledger_backfill.py`: one-time migration importer that built each `.jsonl` from the old markdown ledgers (now removed; `--verify` round-trips decisions). Idempotent.
 - `session_close.py`: the detached sweeper that fills `(pending)` session-ledger rows and appends clearly-decided decision blocks (through `aios_ledger.py`); spawned by the SessionStart hook (`.claude/hooks/`).
-- `ledger_lock.py`: the legacy cross-process file lock (the JSONL ledgers now lock inside `aios_ledger.py`); retained for reference.
 - `transcript_quality_score.py`: deterministic garble detector for meeting captures (no model, no cost); gates ingest and verifies re-transcriptions.
 - `wiki_retranscribe.py`: tier-2 AssemblyAI re-transcription engine (local audio in, verbatim `_asr.md` mirror out, verify-or-abort, cost cap); driven by `/wiki-retranscribe`.
 - `ticket_tracker.py`: tier-2 Linear tracker-drift connector (`governance/ticket-tracker.md`), off by default. `--check` for read-only findings (feeds `hygiene_check.py` group 7 when `NISSE_TRACKER_DRIFT=1`), `--sweep` to apply the evidence-provable auto-fixes and emit a ping. Config-driven: `TICKET_TRACKER_PROJECTS`/`TICKET_TRACKER_KEY_PREFIX`/`TICKET_TRACKER_OWNER_EMAIL` in `.env`; ships wired to Linear as the example provider but the check/sweep logic is tracker-agnostic.

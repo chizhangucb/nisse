@@ -7,11 +7,10 @@ satellite cwd. Always writes the HUB ledger. Idempotent upsert:
   time drifts toward last activity ~= session end) and keep the focus untouched.
 - If not, insert a new row with a (pending) focus.
 
-The ledger is now records/sessions.jsonl (was a markdown pipe table). The upsert
-+ its flock + the merge-by-row guard all live in
-scripts/aios_ledger.upsert_session; this hook only resolves (hub, repo) and calls
-it. The one scripts/ import (aios_ledger) is the sanctioned exception to the
-"hooks import nothing" rule, matching the mirror-not-reinvent migration.
+The ledger is records/sessions.jsonl. The upsert + its flock + the merge-by-row
+guard all live in scripts/aios_ledger.upsert_session; this hook only resolves
+(hub, repo) and calls it. The one scripts/ import (aios_ledger) is the sanctioned
+exception to the "hooks import nothing" rule.
 
 Hub + repo resolution (_resolve_hub_and_repo):
 - Find the hub first (AIOS_HUB, else this hook's own repo via __file__). If it is
@@ -42,15 +41,12 @@ def _is_subsession():
     return any(k.startswith("AIOS_") and k.endswith("SUBSESSION") for k in e)
 
 
-# The hub ledger file (jsonl); the legacy markdown name is still accepted for
-# hub-detection through the bake.
+# The hub ledger file: its presence marks a repo as the hub.
 LEDGER_REL = os.path.join("records", "sessions.jsonl")
-LEGACY_LEDGER_REL = os.path.join("records", "sessions_index.md")
 
 
 def _has_ledger(root):
-    return (os.path.exists(os.path.join(root, LEDGER_REL))
-            or os.path.exists(os.path.join(root, LEGACY_LEDGER_REL)))
+    return os.path.exists(os.path.join(root, LEDGER_REL))
 
 
 def main():

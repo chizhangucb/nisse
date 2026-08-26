@@ -29,7 +29,7 @@ synthesis/      cross-source arguments, comparisons, open questions
 confidential/   your most sensitive knowledge pages (categories: governance/confidentiality.md)
 annex/          rotated evidence overflow from living pages, mirror-pathed
 metadata/       index.md, log.jsonl, sources.jsonl, tag_registry.md, name_registry.md
-  index/        retired monthly source-index shards (sources-YYYY-MM.md; the live store is sources.jsonl)
+  index/        monthly source-index shards (sources-YYYY-MM.md), the human-readable companion to sources.jsonl
 ```
 
 - Filenames `lowercase_with_underscores.md`. Living pages (entities, concepts, synthesis) carry no dates. Point-in-time records do: raw transcripts, brainstorms, and meeting source pages are `YYYY-MM-DD_<series_slug>.md`, source page slug identical to its raw file, series name not session topic (topics go in the index annotation). Non-meeting source pages get dateless topic slugs; clippings and documents keep original names.

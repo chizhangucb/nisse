@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Confidentiality guard for CI (CHI-219).
+"""Confidentiality guard for CI.
 
 Deterministic, read-only. Fails the build (exit 1) if a tracked file leaks an
-owner absolute home path, if a shipped example/fixture file has lost its
-"this is synthetic" marker, or if `.gitignore` stops covering the local-only
-data and config that must never enter git. Green output and exit 0 when clean.
+owner absolute home path or a private issue-tracker id, if a shipped
+example/fixture file has lost its "this is synthetic" marker, or if `.gitignore`
+stops covering the local-only data and config that must never enter git. Green
+output and exit 0 when clean.
 
 Reuses `hygiene_check.py`'s machinery (read_text) rather than re-deriving it.
 Stdlib only; defensive (a broken check degrades to a finding, never a crash).
@@ -33,6 +34,12 @@ from hygiene_check import read_text  # noqa: E402  (shared machinery, see docstr
 # match only a home-directory prefix immediately followed by the username.
 HOME_PATH_RE = re.compile(r"[/\\](?:Users|home)[/\\]chizhang(?![\w-])")
 
+# The maintainer's private issue-tracker ids (the tracker prefix followed by a
+# number) must never ship in the public kit: they point into a private board and
+# leak internal workflow. A fork with its own tracker retunes this prefix.
+# Case-sensitive so an ordinary word ending in "chi" never trips.
+TRACKER_ID_RE = re.compile(r"\bCHI-\d+")
+
 # Files that legitimately CARRY leak-shaped strings because they document the
 # guard itself. Scanning them would fail the guard on its own commit. Matched
 # against the repo-relative path (prefix match on the dir entries).
@@ -57,7 +64,7 @@ REQUIRED_GITIGNORE = (
     "wiki/raw/transcripts/*",
     ".claude/settings.local.json",
     ".claude/state/",
-    "records/.sessions_index.lock",
+    "records/.sessions.lock",
     ".tmp/",
 )
 
@@ -98,6 +105,23 @@ def check_home_paths(root, rels, findings):
                     f"{line.strip()[:80]}")
 
 
+def check_tracker_ids(root, rels, findings):
+    """Flag any private tracker id in a tracked file. Only the guard's own
+    files are exempt (plans/ and archives/ ARE scanned: a clean kit ships no
+    tracker ids anywhere)."""
+    for rel in rels:
+        if rel in SELF_EXCLUDED_FILES or rel.endswith(SKIP_SCAN_SUFFIXES):
+            continue
+        text = read_text(os.path.join(root, rel))
+        if text is None:
+            continue
+        for i, line in enumerate(text.splitlines(), 1):
+            if TRACKER_ID_RE.search(line):
+                findings.append(
+                    f"private tracker id leaked at {rel}:{i}: "
+                    f"{line.strip()[:80]}")
+
+
 def check_synthetic_markers(root, findings):
     for rel in SYNTHETIC_FIXTURES:
         path = os.path.join(root, rel)
@@ -131,6 +155,7 @@ def run_checks(root):
         findings.append("git ls-files failed; not a git repo or git missing")
         return findings
     check_home_paths(root, rels, findings)
+    check_tracker_ids(root, rels, findings)
     check_synthetic_markers(root, findings)
     check_gitignore(root, findings)
     return findings

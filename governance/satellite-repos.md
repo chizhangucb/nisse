@@ -20,7 +20,7 @@ Project = unit of intent; its hub folder (`projects/<name>/`) is the memory home
 
 ## Records seam
 
-Decisions go to the top of hub `records/decisions.md` with `(session <id>, stream: <name>)`, logged in-flow; brainstorms to hub `records/brainstorms/`. Session rows in `records/sessions_index.md` are written by the Stop hook; Repo column = satellite repo name, hub sessions write `hub`.
+Decisions append to the hub `records/decisions.jsonl` via `scripts/aios_ledger.py append-decision` (one block per session+stream, `--stream <name>`), logged in-flow; brainstorms to hub `records/brainstorms/`. Session rows in `records/sessions.jsonl` are written by the Stop hook; the `repo` field = satellite repo name, hub sessions write `hub`.
 
 Do not fill `(pending)` focus lines manually; the session-close sweeper owns that.
 

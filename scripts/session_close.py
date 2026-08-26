@@ -98,10 +98,8 @@ def find_hub():
         candidates.append(os.path.expanduser(env))
     candidates.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     for c in candidates:
-        # The hub marker is now records/sessions.jsonl; accept the legacy
-        # sessions_index.md too so hub-detection works through the bake.
-        if os.path.exists(os.path.join(c, "records", "sessions.jsonl")) \
-                or os.path.exists(os.path.join(c, "records", "sessions_index.md")):
+        # The hub marker is records/sessions.jsonl.
+        if os.path.exists(os.path.join(c, "records", "sessions.jsonl")):
             return c
     return None
 
@@ -376,7 +374,7 @@ def merge_decisions(decisions):
     """Collapse a session's staged decisions into one block per stream.
 
     The rule is one session = one block, keyed by session ID, scoped by stream
-    (decisions.md header). A session that settled several things is ONE block
+    (the decision block header). A session that settled several things is ONE block
     with several bullets, not several one-bullet blocks. Group by stream in
     first-seen order; the first entry's title heads its stream's block; bullets
     concatenate. Safeguard so a model that still emits separate entries per
@@ -656,8 +654,8 @@ def reap_own_transcripts():
     """Delete the sweeper's own sub-session transcripts.
 
     Every default_runner call leaves a transcript under ~/.claude/projects/
-    for SUBSESSION_CWD; they carry no state (outputs land in the ledger and
-    decisions.md) and only accumulate. The lock guarantees no other sweeper
+    for SUBSESSION_CWD; they carry no state (outputs land in the ledger) and
+    only accumulate. The lock guarantees no other sweeper
     is mid-run. realpath because /tmp is /private/tmp on macOS."""
     folder = os.path.realpath(SUBSESSION_CWD).replace(os.sep, "-")
     d = os.path.expanduser(os.path.join("~", ".claude", "projects", folder))
@@ -678,10 +676,8 @@ def _write_last_run(hub, summary):
 
 
 LEDGER_REF = "refs/ledger/checkpoints"
-# Snapshot the new jsonl truth plus the legacy markdown while it still exists
-# through the bake (the present-filter below drops any that are absent).
-LEDGER_PATHS = ["records/sessions.jsonl", "records/decisions.jsonl",
-                "records/sessions_index.md", "records/decisions.md"]
+# Snapshot the jsonl ledgers (the present-filter below drops any that are absent).
+LEDGER_PATHS = ["records/sessions.jsonl", "records/decisions.jsonl"]
 
 
 def _checkpoint_ledger(hub, dry_run=False):

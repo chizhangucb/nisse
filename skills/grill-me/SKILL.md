@@ -47,4 +47,4 @@ Date: {date} · Goal: {one line}
 
 ## At the end
 
-Reread the capture for contradictions or gaps and reconcile; recap what's captured, what's flagged, and the next step. Decisions meeting the logging bar still get their block in `records/decisions.md`, written in-flow.
+Reread the capture for contradictions or gaps and reconcile; recap what's captured, what's flagged, and the next step. Decisions meeting the logging bar still get their block in `records/decisions.jsonl`, written in-flow.

@@ -18,7 +18,7 @@ Read `wiki/CLAUDE.md`, `wiki/rules.md`, and `references/triage-rules.md` first, 
 
 ## The pass
 
-1. **Confirm scope.** Default window: since the last `triage` entry in `wiki/metadata/log.md`; never all-time unasked. The owner can narrow by page or topic; health checks stay wiki-wide unless narrowed too. Get the nod, then run without stops.
+1. **Confirm scope.** Default window: since the last `triage` entry in `wiki/metadata/log.jsonl`; never all-time unasked. The owner can narrow by page or topic; health checks stay wiki-wide unless narrowed too. Get the nod, then run without stops.
 2. **Sweep before talking:** pages with fresh in-window `# Evidence` plus pages never promoted; the capture queue; run `python3 scripts/hygiene_check.py` for the mechanical wiki findings.
 3. **Recap and propose, page by page:** current truth (or "none yet") → new evidence with trust classes → proposed `# Current truth (last updated: YYYY-MM-DD)` → `## Open decisions` resolve / keep / add. The owner answers promote / edit / skip. **Promotions replace or consolidate: `# Current truth` caps at 7 top-level bullets; growth past it forces a demotion to Evidence.** Semantics: `references/triage-rules.md`.
 4. **Queue:** one disposition per item (Promote / Keep / Skip / Retire), one-line reason each; table in `references/triage-rules.md`.

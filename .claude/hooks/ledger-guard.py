@@ -1,27 +1,23 @@
 #!/usr/bin/env python3
-"""PreToolUse deny hook: route all ledger writes through the append command
-(CHI-313).
+"""PreToolUse deny hook: route all ledger writes through the append command.
 
-The four ledgers (records/decisions.jsonl, records/sessions.jsonl,
-wiki/metadata/log.jsonl, wiki/metadata/sources.jsonl) and the retired markdown
-they dual-write through the bake (decisions.md, sessions_index.md, log.md,
-sources-*.md, and the *_history shards) are written ONLY through
+The four JSONL ledgers (records/decisions.jsonl, records/sessions.jsonl,
+wiki/metadata/log.jsonl, wiki/metadata/sources.jsonl) are written ONLY through
 scripts/aios_ledger.py (the sanctioned append/upsert path). A single serialized
-writer is what removes the CHI-299 concurrent-rewrite corruption class, so this
-hook blocks the accidental and casual write paths and makes the append command
-the obvious one:
+writer is what keeps concurrent sessions from clobbering each other's rows, so
+this hook blocks the accidental and casual write paths and makes the append
+command the obvious one:
 
   Edit / Write / NotebookEdit whose file_path is a ledger file  -> deny
   Bash that redirects into / sed -i / tee / truncates / cp/mv onto / dd-of / an
   inline interpreter that names a ledger file                    -> deny
 
 This is a strong DEFAULT-PATH enforcer, not an airtight boundary: Bash
-obfuscation stays a named residual, exactly as the egress gate documents. What
-actually bounds the damage is git history + line-atomic appends + a bad-line-
-tolerant reader, not this hook alone. Chi keeps raw-edit as an absolute last
-resort (a hook cannot govern her own editor); a stray hand-edit survives because
-the reader skips a bad line, and a validated maintenance command handles the
-rare correction. Reads (cat / grep / the Read tool) are never blocked.
+obfuscation stays a named residual. What actually bounds the damage is git
+history + line-atomic appends + a bad-line-tolerant reader, not this hook alone.
+Raw-edit stays an absolute last resort (a hook cannot govern your own editor); a
+stray hand-edit survives because the reader skips a bad line. Reads (cat / grep /
+the Read tool) are never blocked.
 
 Contract: PreToolUse hook. Reads the tool call as JSON on stdin, prints a JSON
 decision to stdout. On any parse trouble it stays silent (exit 0 = allow), so a
@@ -33,23 +29,19 @@ import re
 import sys
 
 # Basenames that identify a guarded ledger file, matched against the basename of
-# any path the tool would write. sources-* covers the retired monthly shards.
+# any path the tool would write.
 GUARDED_BASENAMES = {
-    "decisions.jsonl", "decisions.md",
-    "sessions.jsonl", "sessions_index.md", ".sessions_index.lock",
-    "log.jsonl", "log.md",
+    "decisions.jsonl",
+    "sessions.jsonl", ".sessions.lock",
+    "log.jsonl",
     "sources.jsonl",
 }
-# Retired shard families (prefix match on the basename).
-GUARDED_PREFIXES = ("sources-",)
-# Retired history-shard directories (any .md under them is guarded).
-GUARDED_DIR_PARTS = ("decisions_history", "log_history")
 
 DENY_MSG = (
     "Ledger files are append-only and write only through the sanctioned "
-    "command (CHI-313). Do not Edit/Write or shell-redirect them. Use:\n"
+    "command. Do not Edit/Write or shell-redirect them. Use:\n"
     "  python3 scripts/aios_ledger.py append-decision "
-    "--date YYYY-MM-DD --title '...' --session <id> --stream <aios|kite|...> "
+    "--date YYYY-MM-DD --title '...' --session <id> --stream <name> "
     "--body '- **Decision.** why. -> pointer'\n"
     "  python3 scripts/aios_ledger.py append-log   --date ... --op ... --detail ...\n"
     "  python3 scripts/aios_ledger.py append-source --month YYYY-MM --slug ... --raw ...\n"
@@ -64,14 +56,7 @@ def _basename_guarded(path):
         return False
     norm = path.replace("\\", "/")
     base = os.path.basename(norm.rstrip("/"))
-    if base in GUARDED_BASENAMES:
-        return True
-    if any(base.startswith(p) and base.endswith(".md") for p in GUARDED_PREFIXES):
-        return True
-    parts = set(norm.split("/"))
-    if parts & set(GUARDED_DIR_PARTS) and base.endswith(".md"):
-        return True
-    return False
+    return base in GUARDED_BASENAMES
 
 
 # Bash tokens that indicate a write to a following/embedded path.
@@ -83,10 +68,10 @@ _REDIRECT_RE = re.compile(r">>?\s*(?:['\"]?)([^\s'\"|;&<>()]+)")
 # vector this guard blocks.
 _MUTATOR_CMDS = {"sed", "tee", "dd", "truncate", "cp", "mv", "install",
                  "python", "python2", "python3", "perl", "ruby", "awk"}
-# The sanctioned writer + maintenance tools ARE the write path: a segment that
-# invokes one is always allowed, even when its args name a ledger file (an
-# append-decision whose body text mentions a ledger, a backfill/reconcile run).
-_SANCTIONED = ("aios_ledger.py", "ledger_backfill.py", "ledger_reconcile.py")
+# The sanctioned writer IS the write path: a segment that invokes it is always
+# allowed, even when its args name a ledger file (an append-decision whose body
+# text mentions a ledger).
+_SANCTIONED = ("aios_ledger.py",)
 
 
 def _bash_writes_ledger(command):
@@ -104,7 +89,7 @@ def _bash_writes_ledger(command):
             if _basename_guarded(target):
                 return True  # even a sanctioned command may not redirect ONTO a ledger
         if any(s in seg for s in _SANCTIONED):
-            continue  # the sanctioned writer / maintenance tools
+            continue  # the sanctioned writer
         toks = seg.split()
         if not toks:
             continue
@@ -115,16 +100,7 @@ def _bash_writes_ledger(command):
 
 
 def _names_ledger(text):
-    for base in GUARDED_BASENAMES:
-        if base in text:
-            return True
-    for pre in GUARDED_PREFIXES:
-        if re.search(re.escape(pre) + r"[0-9-]*\.md", text):
-            return True
-    for part in GUARDED_DIR_PARTS:
-        if part in text:
-            return True
-    return False
+    return any(base in text for base in GUARDED_BASENAMES)
 
 
 def _deny():

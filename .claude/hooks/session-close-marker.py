@@ -16,9 +16,8 @@ import sys, json, os
 
 def find_hub(cwd):
     # AIOS_HUB, then this hook's own repo (__file__), then cwd LAST. cwd-last so a
-    # hub-shaped satellite (its own records/, e.g. nisse) running the hub's copy
-    # resolves to the REAL hub, not itself (CHI-289); a standalone clone still
-    # self-resolves via __file__.
+    # hub-shaped satellite (its own records/) running the hub's copy resolves to
+    # the REAL hub, not itself; a standalone clone still self-resolves via __file__.
     candidates = []
     env = os.environ.get("AIOS_HUB")
     if env:
@@ -28,10 +27,8 @@ def find_hub(cwd):
         os.path.abspath(__file__)))))
     candidates.append(cwd)
     for c in candidates:
-        # The hub marker is now records/sessions.jsonl; accept the legacy
-        # sessions_index.md too so hub-detection works through the bake.
-        if os.path.exists(os.path.join(c, "records", "sessions.jsonl")) \
-                or os.path.exists(os.path.join(c, "records", "sessions_index.md")):
+        # The hub marker is records/sessions.jsonl.
+        if os.path.exists(os.path.join(c, "records", "sessions.jsonl")):
             return c
     return None
 

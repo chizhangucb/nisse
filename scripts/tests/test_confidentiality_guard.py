@@ -21,13 +21,15 @@ HOME = "/" + "Users" + "/" + "chizhang"
 PLACEHOLDER_HOME = "/" + "Users" + "/<you>"
 PUBLIC_HANDLE = "chizhang" + "ucb"
 LOCAL_TOKEN = "~/chizhang" + "-2"
+# Assembled so a literal tracker id never appears in this source.
+TRACKER_ID = "CHI" + "-313"
 
 GITIGNORE = "\n".join([
     ".env",
     "wiki/raw/transcripts/*",
     ".claude/settings.local.json",
     ".claude/state/",
-    "records/.sessions_index.lock",
+    "records/.sessions.lock",
     ".tmp/",
 ]) + "\n"
 
@@ -82,6 +84,27 @@ class TestGuard(unittest.TestCase):
             "README.md": (f"clone github.com/{PUBLIC_HANDLE}/nisse\n"
                           f"backup lives at {LOCAL_TOKEN}\n"),
         })
+        self.addCleanup(self._clean, root)
+        self.assertEqual(cg.run_checks(root), [])
+
+    def test_leaked_tracker_id_fails(self):
+        root = _make_repo({"notes.md": f"see {TRACKER_ID} for context\n"})
+        self.addCleanup(self._clean, root)
+        findings = cg.run_checks(root)
+        self.assertTrue(any("private tracker id" in f for f in findings),
+                        findings)
+
+    def test_tracker_id_scanned_in_plans_and_archives(self):
+        # Unlike home paths, tracker ids ARE scanned under plans/ and archives/.
+        root = _make_repo({"plans/2026-01-01-x.md": f"from {TRACKER_ID}\n"})
+        self.addCleanup(self._clean, root)
+        findings = cg.run_checks(root)
+        self.assertTrue(any("private tracker id" in f for f in findings),
+                        findings)
+
+    def test_tracker_id_in_guard_own_file_excluded(self):
+        root = _make_repo({
+            "scripts/confidentiality_guard.py": f"# pattern {TRACKER_ID}\n"})
         self.addCleanup(self._clean, root)
         self.assertEqual(cg.run_checks(root), [])
 
