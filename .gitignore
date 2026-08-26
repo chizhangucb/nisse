@@ -12,8 +12,7 @@ node_modules/
 .claude/state/
 
 # session-ledger cross-process lock + transient write files
-records/.sessions_index.lock
-records/sessions_index.md.tmp
+records/.sessions.lock
 records/*.jsonl.tmp
 wiki/metadata/*.jsonl.tmp
 

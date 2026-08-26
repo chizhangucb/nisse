@@ -16,7 +16,7 @@ Mechanical checks come from `scripts/hygiene_check.py` (orphans, page budgets, t
 
   `triaged:` is set only when a decision was made.
 - **Evidence archival.** Living page over ~2,000 words: roll the oldest largely-folded Evidence (older than ~1 month, not inside an open block) to `wiki/annex/<same-subpath>.md` (`type: annex`, dates and cites kept), leaving a `> [!note]` pointer atop the live `# Evidence`, until under budget or nothing eligible remains. Nothing eligible: flag it, not fixed. Propose at checkpoint; distill never archives.
-- **Write discipline.** Only what the owner approved. Truth and Open-decisions rewrites dated today, `updated:` bumped; tag merges make the old slug an alias of the canonical, retag frontmatter, leave historical inline `#tags` untouched; `wiki/metadata/index.md` updated for created or retired pages; one `- YYYY-MM-DD | triage | ...` recap at the END of `wiki/metadata/log.md`. Never re-propose what the owner declined, absent new evidence.
+- **Write discipline.** Only what the owner approved. Truth and Open-decisions rewrites dated today, `updated:` bumped; tag merges make the old slug an alias of the canonical, retag frontmatter, leave historical inline `#tags` untouched; `wiki/metadata/index.md` updated for created or retired pages; one `triage` recap row appended to `wiki/metadata/log.jsonl` via `scripts/aios_ledger.py append-log` (`--op triage`). Never re-propose what the owner declined, absent new evidence.
 - **Health checks (judgment).** Ranked, leakage on top, each with a proposed fix or an honest "no action worth taking":
 
   | Check | What fires it |

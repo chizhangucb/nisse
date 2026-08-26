@@ -35,7 +35,7 @@ class TestBudgetFor(unittest.TestCase):
         self.assertEqual(hc._budget_for("governance/lessons.md"), 2000)
 
     def test_uncapped(self):
-        self.assertIsNone(hc._budget_for("records/decisions.md"))
+        self.assertIsNone(hc._budget_for("records/decisions.jsonl"))
         self.assertIsNone(hc._budget_for("references/templates/x.md"))
 
 
@@ -64,9 +64,9 @@ class TestLessonsFileCheck(unittest.TestCase):
 
     def test_over_budget_and_missing_link_flagged(self):
         good = ("### Ship it\n\nAlways do the thing.\n\n"
-                "Why: it works.\nProvenance: [decision](records/decisions.md)\n")
+                "Why: it works.\nProvenance: [decision](records/decisions.jsonl)\n")
         over = ("### Too long\n\n" + ("word " * 200)
-                + "\nProvenance: [x](records/decisions.md)\n")
+                + "\nProvenance: [x](records/decisions.jsonl)\n")
         noprov = "### No link\n\nDo the thing.\nWhy: reasons.\n"
         self._write_lessons(
             "# Lessons\n\n## Rules\n\n- policy prose, not an entry, "

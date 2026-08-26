@@ -1,43 +1,32 @@
 #!/usr/bin/env python3
-"""Append-only JSONL ledger storage for the AIOS (CHI-313).
+"""Append-only JSONL ledger storage for the AIOS.
 
-The single sanctioned write path and shared read helper for the four ledgers
-that used to be hand-maintained markdown and corrupted under concurrent
-sessions on the shared worktree (CHI-299):
+The single sanctioned write path and shared read helper for the four ledgers.
+A single serialized writer keeps concurrent sessions from clobbering each
+other's rows, which is why every write goes through here:
 
   records/decisions.jsonl        append-only, one row per decision BLOCK
   records/sessions.jsonl         upsert current-state store, one row per session
   wiki/metadata/log.jsonl        append-only, one row per wiki operation
   wiki/metadata/sources.jsonl    append-only, one row per meeting source
 
-Design + reasoning: plans/2026-08-25-sqlite-ledger-storage.md (approved),
-records/brainstorms/2026-08-25-sqlite-ledger-storage.md.
-
 Append contract (the three true append-logs: decisions, wiki log, wiki sources)
 --------------------------------------------------------------------------------
 One writer at a time appends one whole line via a single os.write under an
 flock (O_APPEND | O_CREAT), ensure_ascii=False. On a local single-writer-per-
-file filesystem this removes the read-modify-write reorder race that caused
-CHI-299. This is NOT a bare "the OS makes it atomic" claim: Python buffered
-writes are not one syscall and a crash mid-append can truncate the last line,
-so the flock + whole-line os.write + a reader that SKIPS any unparseable or
-partial trailing line are all load-bearing. The invariant is void on NFS /
-iCloud / Dropbox-synced paths.
+file filesystem this removes the read-modify-write reorder race. This is NOT a
+bare "the OS makes it atomic" claim: Python buffered writes are not one syscall
+and a crash mid-append can truncate the last line, so the flock + whole-line
+os.write + a reader that SKIPS any unparseable or partial trailing line are all
+load-bearing. The invariant is void on NFS / iCloud / Dropbox-synced paths.
 
 Durability: appends are not fsync'd by default (an fsync-per-append is not
-required because refs/ledger/checkpoints + the cross-machine spool are the
-durability backstop). Pass fsync=True to force it.
+required because git history is the durability backstop). Pass fsync=True to
+force it.
 
 sessions.jsonl is an UPSERT store, not an append-log: it refreshes every turn,
-so it keeps a full read-modify-write under an flock (it was never the CHI-299
-corruption source) and only its serialization changed from a markdown table to
-JSONL so Varde reads structured data.
-
-The migration bake is over: the markdown mirrors (decisions.md, sessions_index.md,
-log.md, the sources shards) were removed once the JSONL fully covered them, so
-the JSONL is the sole store. Because a single locked command is the only writer,
-the decision-log reorder Stop hook, the ledger order/format hygiene backstops,
-log_rotate, and monthly sharding are all retired.
+so it keeps a full read-modify-write under an flock and serializes as JSONL so
+downstream tools read structured data.
 """
 
 import argparse
@@ -57,15 +46,13 @@ SESSIONS_JSONL = ("records", "sessions.jsonl")
 WIKI_LOG_JSONL = ("wiki", "metadata", "log.jsonl")
 WIKI_SOURCES_JSONL = ("wiki", "metadata", "sources.jsonl")
 
-# Lock siblings. The append-logs each guard on their own <file>.lock; sessions
-# keeps the historical .sessions_index.lock name so a concurrent old-code writer
-# during a partial revert still serializes against us.
-SESSIONS_LOCKFILE = ".sessions_index.lock"
+# The append-logs flock the ledger file itself; sessions upserts through a
+# sibling lockfile so its read-modify-write serializes across writers.
+SESSIONS_LOCKFILE = ".sessions.lock"
 
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-# Same header shape session_close.py / the decision-log hook validate. The id
-# class accepts hyphens so a full hyphenated UUID validates as well as a legacy
-# 8-char short (CHI-264).
+# Same header shape session_close.py validates. The id class accepts hyphens so
+# a full hyphenated session UUID validates.
 DECISION_HEADER_RE = re.compile(
     r"^## \d{4}-\d{2}-\d{2}: .+ \(session [0-9A-Za-z-]+, stream: [^)]+\)$")
 EM_DASH = "\u2014"  # em dash codepoint, banned in anything Chi reads
@@ -134,7 +121,7 @@ def read_rows(path):
 
 
 # ---------------------------------------------------------------------------
-# id matching (shared contract, mirrors scripts/ledger_ids.py)
+# id matching (a truncated stored id still resolves to its full session id)
 # ---------------------------------------------------------------------------
 
 def _strip_id(v):
@@ -143,8 +130,8 @@ def _strip_id(v):
 
 def id_match(stored, live):
     """True if a stored id refers to the live full session id: exact, or a
-    shorter stored id that strictly prefixes live. Mirrors ledger_ids.id_match
-    so mixed full-UUID / legacy-short ids coexist (CHI-264)."""
+    shorter stored id that strictly prefixes live (so a truncated id still
+    resolves to the session that owns it)."""
     stored = _strip_id(stored)
     live = _strip_id(live)
     if not stored or not live:
@@ -169,9 +156,8 @@ def read_decisions(hub):
 
 
 def session_has_decision_block(hub, sid):
-    """True when decisions.jsonl already carries a block for this session
-    (warm). Prefix-tolerant both ways (CHI-264). Replaces session_close's
-    has_own_block markdown scan."""
+    """True when decisions.jsonl already carries a block for this session.
+    Prefix-tolerant both ways so a truncated id still matches."""
     for row in read_decisions(hub):
         token = row.get("session")
         if token and (id_match(token, sid) or id_match(sid, token)):
@@ -181,8 +167,7 @@ def session_has_decision_block(hub, sid):
 
 def _decision_pair_present(hub, session, stream):
     """True when a block for exactly this (session, stream) already exists.
-    The one-block-per-(session,stream) idempotency key (CHI-313 review 4);
-    replaces the has_own_block guard for the append path."""
+    The one-block-per-(session,stream) idempotency key for the append path."""
     for row in read_decisions(hub):
         if row.get("session") == session and row.get("stream") == stream:
             return True
@@ -239,13 +224,9 @@ def append_decision(hub, *, date, title, session, stream, body, fsync=False):
     """Validate and append one decision block. Returns (True, None) on write,
     (False, reason) on refusal.
 
-    Idempotency (CHI-313 review 4): refuses if a block for this exact
-    (session, stream) already exists, so a warm session's own block plus the
-    session-close sweeper's append can never duplicate (this replaces the old
-    has_own_block guard at the write layer).
-
-    The bake is over (the markdown mirror decisions.md was removed once the
-    JSONL fully covered it); decisions.jsonl is the sole store."""
+    Idempotency: refuses if a block for this exact (session, stream) already
+    exists, so a session's own block plus the session-close sweeper's append can
+    never duplicate."""
     reason = validate_decision(date=date, title=title, session=session,
                                stream=stream, body=body)
     if reason:
@@ -280,7 +261,7 @@ def _sessions_lock_path(hub):
 class _SessionsLock:
     """Blocking exclusive flock across a sessions.jsonl read-modify-write.
     Fail-open: if the lockfile cannot be opened at all, proceed unlocked (a
-    rare race beats never writing). Mirrors scripts/ledger_lock semantics."""
+    rare race beats never writing)."""
 
     def __init__(self, hub, blocking=True, retry_seconds=2.0):
         self.path = _sessions_lock_path(hub)
@@ -375,7 +356,7 @@ def upsert_session(hub, *, session, stamp, repo, focus=None, blocking=True,
     this full id and is upgraded in place), refresh its stamp and, when focus
     is given, its focus (capped); otherwise keep the existing focus. If absent,
     insert with focus or (pending). Refuses a write that would DROP any row it
-    read (the merge-by-row guard, CHI-193). Returns True on write.
+    read (the merge-by-row guard). Returns True on write.
 
     blocking=False makes the lock fail-open after retry_seconds (proceed
     unlocked rather than block): the Stop hook uses this so a stuck lock never
@@ -410,9 +391,9 @@ def upsert_session(hub, *, session, stamp, repo, focus=None, blocking=True,
 
 def insert_pending_if_absent(hub, *, session, stamp, repo):
     """Insert a (pending) row only if no row for this session exists yet, under
-    the lock. Returns True if inserted. The CHI-158 genesis backstop wants
-    insert-only semantics (never bump an existing row's stamp), and the under-
-    lock re-check makes a concurrent late Stop hook unable to duplicate it."""
+    the lock. Returns True if inserted. Insert-only semantics (never bump an
+    existing row's stamp), and the under-lock re-check makes a concurrent late
+    Stop hook unable to duplicate it."""
     with _SessionsLock(hub):
         rows = read_rows(hub_path(hub, SESSIONS_JSONL))
         if any(id_match(r.get("session"), session) for r in rows):
@@ -509,7 +490,7 @@ def _read_body(args):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(
-        description="Append-only JSONL ledger writer (CHI-313). "
+        description="Append-only JSONL ledger writer. "
                     "The only sanctioned write path for the four ledgers.")
     ap.add_argument("--hub", default=None)
     sub = ap.add_subparsers(dest="cmd", required=True)

@@ -28,7 +28,7 @@ The tracker is canonical for work state; `records/` for history and decisions. U
 ## Descriptions and comments
 
 - The description is the single, current, self-contained brief. Editing it when scope or approach changes is part of the work. Comments never patch a stale body.
-- Comments carry exactly two things: claim/handoff notes, and one completion note (what shipped, session ID) at In Review. Progress narration goes to `records/`, decisions to `records/decisions.md`.
+- Comments carry exactly two things: claim/handoff notes, and one completion note (what shipped, session ID) at In Review. Progress narration goes to `records/`, decisions to `records/decisions.jsonl`.
 
 ## Enforcement
 

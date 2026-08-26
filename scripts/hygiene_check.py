@@ -93,9 +93,9 @@ NO_UPDATES_LINE = "(No durable updates.)"
 
 # taxonomy: what may live at each contract point
 RECORDS_ALLOWED = {
-    "decisions.md", "decisions.jsonl", "decisions_history",
-    "sessions_index.md", "sessions.jsonl",
-    "brainstorms", "reports", "README.md", ".sessions_index.lock", ".gitkeep",
+    "decisions.jsonl",
+    "sessions.jsonl",
+    "brainstorms", "reports", "README.md", ".sessions.lock", ".gitkeep",
 }
 DATED_NAME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}-.+\.md$")
 CLAUDE_MACHINERY_FILES = {
@@ -566,7 +566,7 @@ def check_taxonomy():
                 continue
             add("MED", "judgment", "structural",
                 f"records/{name} is not one of the 4 allowed streams "
-                "(decisions, sessions_index, brainstorms, reports)",
+                "(decisions, sessions, brainstorms, reports)",
                 f"records/{name}")
 
     for label, root in [("hub", ROOT)] + _satellite_roots():
