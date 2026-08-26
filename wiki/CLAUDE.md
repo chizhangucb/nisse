@@ -28,7 +28,7 @@ concepts/       ideas, mechanisms, frameworks (common nouns)
 synthesis/      cross-source arguments, comparisons, open questions
 confidential/   your most sensitive knowledge pages (categories: governance/confidentiality.md)
 annex/          rotated evidence overflow from living pages, mirror-pathed
-metadata/       index.md, log.jsonl (+ log.md mirror), sources.jsonl, tag_registry.md, name_registry.md
+metadata/       index.md, log.jsonl, sources.jsonl, tag_registry.md, name_registry.md
   index/        retired monthly source-index shards (sources-YYYY-MM.md; the live store is sources.jsonl)
 ```
 
@@ -124,4 +124,4 @@ confidential: [slug, slug]  # empty, or your lenses from governance/confidential
 
 - One-off scripts, logs, scratch files go ONLY under repo-root `.tmp/` (gitignored), never into `wiki/` or other content folders.
 - Style per `governance/communication-style.md`. Wiki pages are terse and factual, not essayistic.
-- File-class word budgets, checked by the hygiene script: living wiki pages 2,000; this schema 2,000; `wiki/rules.md` 400; any SKILL.md 500. Sediment homes: stories to `records/decisions.md`, ops detail to skill references, item facts to the item's page.
+- File-class word budgets, checked by the hygiene script: living wiki pages 2,000; this schema 2,000; `wiki/rules.md` 400; any SKILL.md 500. Sediment homes: stories to the decisions log (`records/decisions.jsonl`), ops detail to skill references, item facts to the item's page.

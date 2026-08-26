@@ -33,11 +33,11 @@ so it keeps a full read-modify-write under an flock (it was never the CHI-299
 corruption source) and only its serialization changed from a markdown table to
 JSONL so Varde reads structured data.
 
-Bake: through the bake period every decisions/log/sources append ALSO mirror-
-writes the retired markdown file (dual-write, so a revert is clean). The
-markdown writer is dropped only after the bake. Because a single locked command
-is now the only writer, the decision-log reorder Stop hook, the ledger order/
-format hygiene backstops, log_rotate, and monthly sharding are all retired.
+The migration bake is over: the markdown mirrors (decisions.md, sessions_index.md,
+log.md, the sources shards) were removed once the JSONL fully covered them, so
+the JSONL is the sole store. Because a single locked command is the only writer,
+the decision-log reorder Stop hook, the ledger order/format hygiene backstops,
+log_rotate, and monthly sharding are all retired.
 """
 
 import argparse
@@ -53,7 +53,6 @@ import sys
 # ---------------------------------------------------------------------------
 
 DECISIONS_JSONL = ("records", "decisions.jsonl")
-DECISIONS_MD = ("records", "decisions.md")
 SESSIONS_JSONL = ("records", "sessions.jsonl")
 WIKI_LOG_JSONL = ("wiki", "metadata", "log.jsonl")
 WIKI_SOURCES_JSONL = ("wiki", "metadata", "sources.jsonl")
@@ -236,8 +235,7 @@ def render_decision_block(row):
     return f"{header}\n\n{body}"
 
 
-def append_decision(hub, *, date, title, session, stream, body,
-                    dual_write_md=True, fsync=False):
+def append_decision(hub, *, date, title, session, stream, body, fsync=False):
     """Validate and append one decision block. Returns (True, None) on write,
     (False, reason) on refusal.
 
@@ -246,10 +244,8 @@ def append_decision(hub, *, date, title, session, stream, body,
     session-close sweeper's append can never duplicate (this replaces the old
     has_own_block guard at the write layer).
 
-    Through the bake, also inserts the rendered block at the TOP of
-    decisions.md (dual-write) so a code revert leaves the markdown current.
-    Because this locked command is the only writer, the block lands at the
-    correct newest-first position without the retired reorder Stop hook."""
+    The bake is over (the markdown mirror decisions.md was removed once the
+    JSONL fully covered it); decisions.jsonl is the sole store."""
     reason = validate_decision(date=date, title=title, session=session,
                                stream=stream, body=body)
     if reason:
@@ -260,33 +256,7 @@ def append_decision(hub, *, date, title, session, stream, body,
     row = {"date": date, "title": title.strip(),
            "session": session, "stream": stream, "body": body}
     _append_line(hub_path(hub, DECISIONS_JSONL), _dumps(row), fsync=fsync)
-    if dual_write_md:
-        _mirror_insert_decision_md(hub, row)
     return True, None
-
-
-def _mirror_insert_decision_md(hub, row):
-    """Insert one rendered block as the newest entry in decisions.md, above the
-    first `## ` block (so the header + rotated-history section stay on top).
-    Bake-only mirror; best-effort (never breaks the jsonl append that already
-    landed)."""
-    path = hub_path(hub, DECISIONS_MD)
-    try:
-        with open(path, encoding="utf-8") as f:
-            lines = f.read().splitlines()
-    except OSError:
-        return
-    block = render_decision_block(row)
-    idx = next((i for i, ln in enumerate(lines) if ln.startswith("## ")),
-               len(lines))
-    lines[idx:idx] = block.splitlines() + [""]
-    try:
-        tmp = path + ".tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
-            f.write("\n".join(lines).rstrip("\n") + "\n")
-        os.replace(tmp, path)
-    except OSError:
-        pass
 
 
 # ===========================================================================
@@ -553,8 +523,6 @@ def main(argv=None):
     d.add_argument("--body", default=None,
                    help="block body (bullets/notes); or use --body-file")
     d.add_argument("--body-file", default=None)
-    d.add_argument("--no-md", action="store_true",
-                   help="skip the bake-period decisions.md mirror write")
 
     lg = sub.add_parser("append-log", help="append one wiki-log row")
     lg.add_argument("--date", required=True)
@@ -578,8 +546,7 @@ def main(argv=None):
     if args.cmd == "append-decision":
         ok, reason = append_decision(
             hub, date=args.date, title=args.title, session=args.session,
-            stream=args.stream, body=_read_body(args),
-            dual_write_md=not args.no_md)
+            stream=args.stream, body=_read_body(args))
     elif args.cmd == "append-log":
         ok, reason = append_wiki_log(hub, date=args.date, op=args.op,
                                      detail=args.detail)
