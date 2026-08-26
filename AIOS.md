@@ -14,7 +14,7 @@ This file is a map. Each line points at the source of truth; nothing is restated
 
 - `context/`: who the owner is: `about-me.md`, `about-business.md`, `about-team.md`, `priorities.md` (live), `goals.md` (frozen quarterly yardstick). This quarter's focus lives in `context/priorities.md`, never here.
 - `operations.md`: every reachable system, the single registry of scheduled tasks, the connector list, budgets and escalation rules.
-- `records/`: 4 append-only streams ONLY. `records/decisions.md` (append-only decisions; logging bar and format in its header), `records/sessions_index.md` (one row per session, hook-maintained), `records/brainstorms/`, `records/reports/` (recurring generated output).
+- `records/`: 4 append-only streams ONLY. The two structured ledgers are append-only JSONL, written only through `scripts/aios_ledger.py` (a deny hook, `.claude/hooks/ledger-guard.py`, blocks raw edits): `records/decisions.jsonl` (one row per decision block; `aios_ledger.py append-decision`; logging bar and format in `decisions.md`'s header) and `records/sessions.jsonl` (one row per session, Stop-hook-maintained upsert; `aios_ledger.py upsert-session`). The matching `.md` files are the retired human-readable mirrors kept through the migration bake. Plus `records/brainstorms/`, `records/reports/` (recurring generated output).
 - `plans/`: things written to build (plans, designs, PRDs), dated filenames `YYYY-MM-DD-<slug>.md`; shipped plans move to `archives/plans/`. `plans/workstate/` holds live per-task workstate files (continuous-checkpoint rule, `governance/building.md`).
 - `scripts/`: deterministic pipeline mechanics, tests in `scripts/tests/`. Skills route judgment; scripts do mechanics. Promotion rule: 2+ consumers or a scheduled-job dependency moves a script here.
 - `wiki/`: the knowledge layer. **`wiki/CLAUDE.md` is the schema and it is binding** for any work inside `wiki/`: immutable `raw/`, append-only evidence, synthesis only with the owner's yes in triage, fail-closed routing of sensitive material to `wiki/confidential/`.
@@ -32,8 +32,8 @@ Egress gate (`scripts/egress_gate/README.md`), model routing (`governance/routin
 ## How you work with the owner
 
 - Lead with what needs action. Answer the question asked; no padding.
-- When the owner decides something that meets the logging bar (`records/decisions.md` header), draft the decision line in-flow, in the deciding session.
+- When the owner decides something that meets the logging bar (`records/decisions.md` header), append it in-flow, in the deciding session, via `python3 scripts/aios_ledger.py append-decision ...` (never hand-edit the ledger).
 - Session end: sweep open items to the tracker if one is wired (`governance/ticket-tracker.md`); an explicit yes means Todo, an unconfirmed idea means Backlog with a revisit trigger. Silence is never commitment.
 - A manual task spotted 3+ times is an automation candidate; surface it.
 - Default Shift: for any new task, ask "to what extent could AI be leveraged here?" before assuming the old way.
-- Durable things get promoted out of chat memory: preferences to `governance/`, facts to `context/`, decisions to `records/decisions.md`.
+- Durable things get promoted out of chat memory: preferences to `governance/`, facts to `context/`, decisions to `records/decisions.jsonl` (via `aios_ledger.py append-decision`).

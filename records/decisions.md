@@ -2,6 +2,12 @@
 
 Append-only record of decisions and why. Newest block at the TOP.
 
+The live store is `records/decisions.jsonl` (one JSON row per decision block: `{date, title, session, stream, body}`), written only through the sanctioned command:
+
+    python3 scripts/aios_ledger.py append-decision --date YYYY-MM-DD --title '...' --session <id> --stream <name> --body '- **Decision.** why. -> pointer'
+
+The deny hook (`.claude/hooks/ledger-guard.py`) blocks a raw Edit/Write or shell-redirect of the ledger, so appends stay serialized, append-only, and validated. This markdown file is the retired, human-readable mirror kept through the migration bake; do not hand-edit it.
+
 **Logging bar, log iff:** (1) changes future behavior (policy/structure/schema/rule), (2) commits something hard to undo, or (3) settles a question a future session would re-litigate. Never logged: task completions, preferences already in rules, one-off no-recurrence choices.
 
 **Format:** one `## YYYY-MM-DD: Title` header (append `(session <id>, stream: <name>)`; hooks and pipelines parse these, so never alter them), then one bullet per decision: `- **Decision stated.** Why clause. → pointer`. Bold lead is the decision, then a short why, then a pointer to the source with the long story (brainstorm Q#, plan doc, file path). Aim ~30 words per line; push detail to the pointer, never truncate meaning. A block with multiple decisions gets multiple bullets. Written in-flow by the deciding session, never deferred.

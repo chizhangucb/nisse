@@ -28,7 +28,10 @@ def find_hub(cwd):
         os.path.abspath(__file__)))))
     candidates.append(cwd)
     for c in candidates:
-        if os.path.exists(os.path.join(c, "records", "sessions_index.md")):
+        # The hub marker is now records/sessions.jsonl; accept the legacy
+        # sessions_index.md too so hub-detection works through the bake.
+        if os.path.exists(os.path.join(c, "records", "sessions.jsonl")) \
+                or os.path.exists(os.path.join(c, "records", "sessions_index.md")):
             return c
     return None
 

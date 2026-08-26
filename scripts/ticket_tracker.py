@@ -3,7 +3,8 @@
 governance/ticket-tracker.md against a real board.
 
 Deterministic: Linear GraphQL issues/comments/history + git log +
-records/sessions_index.md + records/decisions.md + filesystem. No LLM.
+records/sessions.jsonl + records/decisions.jsonl (via aios_ledger) +
+filesystem. No LLM.
 Stdlib only. Off by default: `scripts/hygiene_check.py` only imports this
 module when NISSE_TRACKER_DRIFT=1 (see its group-7 check).
 
@@ -50,6 +51,9 @@ import urllib.request
 from collections import namedtuple
 from datetime import date, datetime, timedelta
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import aios_ledger  # noqa: E402  the append-only JSONL ledger read helpers
+
 # ---- config -----------------------------------------------------------------
 
 _PROJECTS_RAW = os.environ.get("TICKET_TRACKER_PROJECTS", "")
@@ -77,7 +81,6 @@ SUBJECT_REF_RE = re.compile(rf"^({_PREFIX_ESC}-\d+)\b", re.MULTILINE)
 FILE_RE = re.compile(r"\b((?:[\w.-]+/)+[\w.-]+\.(?:py|md|json|ya?ml|sh|ts|tsx|js))\b")
 CHECKBOX_DONE_RE = re.compile(r"^\s*[-*]\s*\[x\]", re.IGNORECASE | re.MULTILINE)
 CHECKBOX_OPEN_RE = re.compile(r"^\s*[-*]\s*\[ \]", re.MULTILINE)
-DECISION_HEADER_RE = re.compile(r"^##\s+(\d{4}-\d{2}-\d{2}):", re.MULTILINE)
 # Tracker writes under a personal API key carry the owner's account identity
 # even when an agent made them. Tracker governance requires agent
 # claim/handoff/completion comments to carry a session marker, so those
@@ -342,13 +345,15 @@ def _unaddressed_owner_comment(node):
     return latest.get("createdAt")
 
 
-def run_checks(issues, git_window_text, recent_activity_text, decisions_text,
+def run_checks(issues, git_window_text, recent_activity_text, decision_dates,
                file_exists, today, plan_docs=None, workstate_docs=None):
     """All checks (a)-(j) over already-fetched issues. Pure: no I/O, no
     network.
 
     git_window_text: commits since the last sweep (check a evidence).
-    recent_activity_text: git log 7d + sessions_index rows 7d (check c).
+    recent_activity_text: git log 7d + sessions ledger rows 7d (check c).
+    decision_dates: {ticket -> newest decisions.jsonl block date} (check f),
+      precomputed by _decision_dates_by_issue so this stays pure.
     plan_docs: [(relpath, {ticket refs}), ...] from the repo's build-doc
       folder; any plan whose ticket is Done is an archive candidate (check i).
       Empty/None -> the check is skipped.
@@ -360,7 +365,7 @@ def run_checks(issues, git_window_text, recent_activity_text, decisions_text,
     known = {n["identifier"] for n in issues}
     window_refs = set(SUBJECT_REF_RE.findall(git_window_text or ""))
     recent_refs = set(TICKET_RE.findall(recent_activity_text or ""))
-    decision_dates = _decision_dates_by_issue(decisions_text or "")
+    decision_dates = decision_dates or {}
 
     def add(sev, msg, path=""):
         findings.append(Finding(sev, "judgment", "ticket_tracker", msg, path))
@@ -557,23 +562,22 @@ def _daily_pinged_idents(fixed, result):
     return idents
 
 
-def _decision_dates_by_issue(text):
-    """identifier -> newest decisions.md block date that names it."""
+def _decision_dates_by_issue(root):
+    """identifier -> newest decisions.jsonl block date (a date) that names it.
+
+    Iterates the append-only decision rows and scans each row's title + body
+    for ticket refs, mapping every ref to the max block date seen. Missing
+    ledger -> {}."""
     out = {}
-    current = None
-    for line in text.splitlines():
-        m = DECISION_HEADER_RE.match(line)
-        if m:
-            try:
-                current = date.fromisoformat(m.group(1))
-            except ValueError:
-                current = None
+    for row in aios_ledger.read_decisions(root):
+        try:
+            d = date.fromisoformat((row.get("date") or "")[:10])
+        except ValueError:
             continue
-        if current is None:
-            continue
-        for ref in TICKET_RE.findall(line):
-            if ref not in out or current > out[ref]:
-                out[ref] = current
+        text = (row.get("title") or "") + "\n" + (row.get("body") or "")
+        for ref in TICKET_RE.findall(text):
+            if ref not in out or d > out[ref]:
+                out[ref] = d
     return out
 
 
@@ -590,33 +594,24 @@ def _git_log(root, since):
 
 
 def _sessions_recent(root, today, days):
-    """sessions_index rows whose date cell is within `days`."""
-    path = os.path.join(root, "records", "sessions_index.md")
-    try:
-        with open(path, encoding="utf-8") as f:
-            text = f.read()
-    except OSError:
-        return ""
+    """sessions.jsonl rows whose stamp date is within `days` of today, rendered
+    one per line so TICKET_RE can scan the focus cell for ticket refs (check c).
+
+    stamp is 'YYYY-MM-DD HHMM'; the first 10 chars are the date. Returns the
+    same newline-joined text shape the callers scan; missing ledger -> ''."""
     keep = []
     floor = today - timedelta(days=days)
-    for line in text.splitlines():
-        m = re.match(r"\|\s*(\d{4}-\d{2}-\d{2})", line)
-        if not m:
-            continue
+    for row in aios_ledger.read_sessions(root):
+        stamp = row.get("stamp") or ""
         try:
-            if date.fromisoformat(m.group(1)) >= floor:
-                keep.append(line)
+            if date.fromisoformat(stamp[:10]) < floor:
+                continue
         except ValueError:
             continue
+        keep.append("| {} | {} | {} | {} |".format(
+            stamp, row.get("session") or "", row.get("focus") or "",
+            row.get("repo") or ""))
     return "\n".join(keep)
-
-
-def _read(path):
-    try:
-        with open(path, encoding="utf-8") as f:
-            return f.read()
-    except OSError:
-        return ""
 
 
 PLAN_DOC_DIRS = ("plans", "docs")
@@ -687,7 +682,7 @@ def gather_evidence(root, today, since):
         "git_window_text": _git_log(root, since),
         "recent_activity_text": (_git_log(root, f"{STALE_DAYS} days ago") + "\n"
                                  + _sessions_recent(root, today, STALE_DAYS)),
-        "decisions_text": _read(os.path.join(root, "records", "decisions.md")),
+        "decision_dates": _decision_dates_by_issue(root),
         "file_exists": lambda p: os.path.exists(os.path.join(root, p)),
         "plan_docs": _plan_docs(root),
         "workstate_docs": _workstate_docs(root),
@@ -738,7 +733,7 @@ def _load_key(root):
 # ---- sweep mode -------------------------------------------------------------
 
 def sweep(client, projects, state_path, git_window_text, recent_activity_text,
-          decisions_text, file_exists, today, plan_docs=None,
+          decision_dates, file_exists, today, plan_docs=None,
           workstate_docs=None):
     """Apply auto-fixes, persist the cursor, and return {"fixed", "ping",
     "findings"}. `ping` is None when the board is clean (silent day)."""
@@ -746,7 +741,7 @@ def sweep(client, projects, state_path, git_window_text, recent_activity_text,
     for project in projects:
         issues.extend(client.fetch_issues(project))
     result = run_checks(issues, git_window_text, recent_activity_text,
-                        decisions_text, file_exists, today, plan_docs,
+                        decision_dates, file_exists, today, plan_docs,
                         workstate_docs)
 
     fixed = []
