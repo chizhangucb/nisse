@@ -21,6 +21,16 @@ import sys
 from collections import defaultdict
 from datetime import date, datetime
 
+# aios_ledger is the shared helper for the JSONL ledgers (decisions.jsonl,
+# sessions.jsonl). Imported as a sibling (scripts/ is on sys.path when a script
+# here runs, and the test harness inserts scripts/ before importing this
+# module). A missing module degrades the ledger-sourced checks to a skip rather
+# than crashing.
+try:
+    import aios_ledger
+except Exception:  # pragma: no cover - defensive
+    aios_ledger = None
+
 # ---- config (the owner-tunable seam) ----------------------------------------
 
 # Your approved personal remote owner (e.g. "yourhandle"). Empty = the
@@ -83,7 +93,8 @@ NO_UPDATES_LINE = "(No durable updates.)"
 
 # taxonomy: what may live at each contract point
 RECORDS_ALLOWED = {
-    "decisions.md", "decisions_history", "sessions_index.md",
+    "decisions.md", "decisions.jsonl", "decisions_history",
+    "sessions_index.md", "sessions.jsonl",
     "brainstorms", "reports", "README.md", ".sessions_index.lock", ".gitkeep",
 }
 DATED_NAME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}-.+\.md$")
@@ -240,13 +251,13 @@ def check_git():
 # ---- group 3: freshness / staleness ----------------------------------------
 
 def check_freshness():
-    ledger = os.path.join(ROOT, "records", "sessions_index.md")
-    text = read_text(ledger)
-    if text:
-        pending = sum(1 for ln in text.splitlines() if "(pending)" in ln)
+    if aios_ledger is not None:
+        pending = sum(1 for r in aios_ledger.read_sessions(ROOT)
+                      if r.get("focus") == aios_ledger.PENDING)
         if pending:
             add("LOW", "judgment", "freshness",
-                f"{pending} session-ledger row(s) still '(pending)'", rel(ledger))
+                f"{pending} session-ledger row(s) still '(pending)'",
+                "records/sessions.jsonl")
 
     prio = os.path.join(ROOT, "context", "priorities.md")
     age = _dated_field_age(prio, r"Last refreshed:\**\s*(\d{4}-\d{2}-\d{2})")
@@ -338,33 +349,45 @@ def _budget_for(r):
     return None
 
 
-DECISION_HEADER_RE = re.compile(r"^##\s+(\d{4}-\d{2}-\d{2}):\s*(.*)$")
-DECISION_HEADER_OK_RE = re.compile(
-    r"\(session\s+[0-9a-f]{4,}…?,\s*stream:\s*[\w-]+\)\s*$")
-
-
 def _check_decision_log():
-    log = os.path.join(ROOT, "records", "decisions.md")
-    text = read_text(log)
-    if text is None:
+    """Growth-size, per-bullet word budget, and staleness for the decisions
+    ledger, sourced from decisions.jsonl via aios_ledger (the single locked
+    writer now guarantees header/order/format, so those backstops are retired).
+    Silent when the ledger is empty or aios_ledger is unavailable."""
+    if aios_ledger is None:
         return
-    wc = len(text.split())
-    if wc > DECISION_LOG_ARCHIVE_WORDS:
-        add("LOW", "judgment", "doc-health",
-            f"decisions log large ({wc}w), rotate old months to "
-            "decisions_history/", rel(log))
+    rows = aios_ledger.read_decisions(ROOT)
+    if not rows:
+        return
+    path = "records/decisions.jsonl"
 
-    for line in text.splitlines():
-        m = DECISION_HEADER_RE.match(line)
-        if m and not DECISION_HEADER_OK_RE.search(line):
-            add("MED", "judgment", "doc-health",
-                "decisions block header missing (session <id>, stream: <name>): "
-                f"{m.group(2)[:50]}", rel(log))
-        s = line.strip()
-        if s.startswith("- **") and len(s.split()) > DECISION_LINE_WORDS:
-            add("MED", "judgment", "doc-health",
-                f"decision line over budget ({len(s.split())}w > "
-                f"{DECISION_LINE_WORDS}w): {s[:55]}...", rel(log))
+    total_words = sum(len((r.get("title", "") + " " + r.get("body", "")).split())
+                      for r in rows)
+    if total_words > DECISION_LOG_ARCHIVE_WORDS:
+        add("LOW", "judgment", "doc-health",
+            f"decisions log large ({total_words}w), consider archiving old "
+            "entries", path)
+
+    # per-decision-line budget: each `- **Decision.** why. -> pointer` bullet in
+    # a block body is capped. A WARN that prompts a rewrite, never a truncation.
+    for r in rows:
+        for line in (r.get("body", "") or "").splitlines():
+            s = line.strip()
+            if not s.startswith("- **"):
+                continue
+            wc = len(s.split())
+            if wc > DECISION_LINE_WORDS:
+                add("MED", "judgment", "doc-health",
+                    f"decision line over budget ({wc}w > {DECISION_LINE_WORDS}w): "
+                    f"{s[:55]}...", path)
+
+    dates = [d for d in (parse_date(r.get("date", "")) for r in rows) if d]
+    if dates:
+        age = (TODAY - max(dates)).days
+        if age > LIVE_DOC_STALE_DAYS:
+            add("LOW", "judgment", "doc-health",
+                f"decisions log's newest entry is {age}d old, still in use?",
+                path)
 
 
 def _check_lessons_file():

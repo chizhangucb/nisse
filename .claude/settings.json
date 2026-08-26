@@ -11,6 +11,17 @@
             "statusMessage": "Branch guard: checking commit branch"
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${AIOS_HUB:-$HOME/chizhang-2}/.claude/hooks/ledger-guard.py\"",
+            "timeout": 10,
+            "statusMessage": "Ledger guard: routing writes through the append command"
+          }
+        ]
       }
     ],
     "Stop": [

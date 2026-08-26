@@ -14,9 +14,9 @@ that just started, and for each done session:
   One-shot on a mid-tier model, never an agentic session: the agentic shape
   costs orders of magnitude more for a 15-word focus line.
 - writes the focus into the ledger row (mechanics here, judgment in the model)
-- if the session has no block of its own in records/decisions.md, appends any
-  staged decisions there via the mechanical appender (newest block first,
-  always below the file header and rotated-history section)
+- if the session has no block of its own in records/decisions.jsonl, appends
+  any decided blocks there via aios_ledger.append_decision (validated, one
+  row per decision block, idempotent per session+stream)
 
 Precision over recall on decisions: the prompt only stages a decision on an
 explicit, clear yes from the owner; uncertain means stage nothing. A wrongly
@@ -41,7 +41,7 @@ import subprocess
 import sys
 import time
 
-import ledger_lock
+import aios_ledger  # append-only JSONL ledger store (sessions.jsonl + decisions.jsonl)
 
 STALE_HOURS = 24
 LOCK_MAX_AGE_MIN = 30
@@ -56,11 +56,6 @@ SUBSESSION_CWD = "/tmp/aios-session-close"
 # One model call summarizes up to this many done sessions at once instead of
 # one call per session; a batch of 1 degrades gracefully.
 BATCH_SIZE = 6
-
-# The decisions.md block-header shape; a staged header must satisfy this or the
-# appender refuses the whole block.
-HEADER_RE = re.compile(
-    r"^## \d{4}-\d{2}-\d{2}: .+ \(session [0-9A-Za-z]+, stream: [^)]+\)$")
 
 PROMPT_BATCH_TEMPLATE = """You are the AIOS session-close summarizer. Below are {n} distilled agent session transcripts, each the owner's messages and the assistant's replies, tool activity stripped, possibly elided in the middle. Each is marked "--- SESSION <id> (stream: <repo>) ---".
 
@@ -103,7 +98,10 @@ def find_hub():
         candidates.append(os.path.expanduser(env))
     candidates.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     for c in candidates:
-        if os.path.exists(os.path.join(c, "records", "sessions_index.md")):
+        # The hub marker is now records/sessions.jsonl; accept the legacy
+        # sessions_index.md too so hub-detection works through the bake.
+        if os.path.exists(os.path.join(c, "records", "sessions.jsonl")) \
+                or os.path.exists(os.path.join(c, "records", "sessions_index.md")):
             return c
     return None
 
@@ -143,33 +141,13 @@ def release_lock(hub):
 
 
 # ---------------------------------------------------------------------------
-# Ledger parsing (mirrors .claude/hooks/session-ledger.py's table contract)
+# Ledger reads (records/sessions.jsonl via aios_ledger, the single write path)
 # ---------------------------------------------------------------------------
 
-def read_ledger(hub):
-    path = os.path.join(hub, "records", "sessions_index.md")
-    with open(path) as f:
-        lines = f.read().splitlines()
-    sep = next((i for i, ln in enumerate(lines)
-                if ln.lstrip().startswith("|")
-                and set(ln.replace("|", "").strip()) <= {"-", " "}
-                and "-" in ln), None)
-    return path, lines, sep
-
-
-def pending_rows(lines, sep):
-    """[(line_index, stamp, short_id, repo)] for every (pending) row."""
-    out = []
-    if sep is None:
-        return out
-    for i in range(sep + 1, len(lines)):
-        ln = lines[i]
-        if not ln.lstrip().startswith("|"):
-            break
-        cells = [c.strip() for c in ln.strip().strip("|").split("|")]
-        if len(cells) >= 4 and cells[2] == "(pending)":
-            out.append((i, cells[0], cells[1].rstrip("…").strip(), cells[3]))
-    return out
+def pending_rows(hub):
+    """[(stamp, sid, repo)] for every (pending) session. Reads sessions.jsonl
+    via aios_ledger.pending_sessions (was a markdown-table scan)."""
+    return aios_ledger.pending_sessions(hub)
 
 
 def is_done(hub, short, stamp, now=None):
@@ -302,75 +280,11 @@ def distill_transcript(path):
     return digest
 
 
-def _atomic_write_lines(path, lines):
-    """Rewrite the ledger via a temp file + os.replace so a concurrent reader
-    never sees a half-written table. Callers hold the ledger lock; this only
-    guards against torn reads, the lock guards against lost updates."""
-    tmp = path + ".tmp"
-    with open(tmp, "w") as f:
-        f.write("\n".join(lines) + "\n")
-    os.replace(tmp, path)
-
-
-def _resort_rows(lines, sep):
-    """Keep the newest-first contract after an insert: sort the contiguous
-    table rows below the separator by their timestamp cell, descending.
-    Mirrors .claude/hooks/session-ledger.py's _resort."""
-    start = sep + 1
-    end = start
-    while end < len(lines) and lines[end].lstrip().startswith("|"):
-        end += 1
-    rows = lines[start:end]
-
-    def key(ln):
-        first = ln.strip().strip("|").split("|")[0].strip()
-        try:
-            return datetime.datetime.strptime(first, "%Y-%m-%d %H%M")
-        except ValueError:
-            return datetime.datetime.min
-
-    rows.sort(key=key, reverse=True)
-    lines[start:end] = rows
-
-
-def _ledger_shorts(lines, sep):
-    """Set of short session ids already present in the ledger table."""
-    out = set()
-    if sep is None:
-        return out
-    for i in range(sep + 1, len(lines)):
-        ln = lines[i]
-        if not ln.lstrip().startswith("|"):
-            break
-        cells = [c.strip() for c in ln.strip().strip("|").split("|")]
-        if len(cells) >= 2:
-            out.add(cells[1].rstrip("…").strip())
-    return out
-
-
-def write_focus(path, short, focus):
-    """Fill this session's (pending) row, found by id, under the ledger lock.
-
-    Locking + re-reading right before the write closes the lost-update race
-    with live sessions' Stop hooks (which rewrite and resort the same table).
-    """
-    words = focus.split()
-    if len(words) > FOCUS_WORD_CAP:
-        focus = " ".join(words[:FOCUS_WORD_CAP]) + "…"
-    with ledger_lock.ledger_lock(path):
-        with open(path) as f:
-            lines = f.read().splitlines()
-        for i, ln in enumerate(lines):
-            if not ln.lstrip().startswith("|"):
-                continue
-            cells = [c.strip() for c in ln.strip().strip("|").split("|")]
-            if len(cells) >= 4 and cells[1].rstrip("…").strip() == short \
-                    and cells[2] == "(pending)":
-                cells[2] = focus
-                lines[i] = "| " + " | ".join(cells) + " |"
-                _atomic_write_lines(path, lines)
-                return True
-    return False
+def write_focus(hub, sid, focus):
+    """Fill this session's (pending) row, found by id, under the sessions lock
+    (aios_ledger.set_focus over sessions.jsonl). Only touches a still-pending
+    row, so it is idempotent and safe against a live Stop hook."""
+    return aios_ledger.set_focus(hub, sid, focus)
 
 
 # ---------------------------------------------------------------------------
@@ -452,15 +366,10 @@ def parse_batch_result(text):
 # Decisions: warm check, block formatting, mechanical appender
 # ---------------------------------------------------------------------------
 
-def has_own_block(hub, short):
-    """True when decisions.md already carries a block for this session (warm)."""
-    path = os.path.join(hub, "records", "decisions.md")
-    try:
-        with open(path) as f:
-            text = f.read()
-    except OSError:
-        return False
-    return bool(re.search(r"\(session " + re.escape(short), text))
+def has_own_block(hub, sid):
+    """True when decisions.jsonl already carries a block for this session (warm).
+    aios_ledger.session_has_decision_block, prefix-tolerant."""
+    return aios_ledger.session_has_decision_block(hub, sid)
 
 
 def merge_decisions(decisions):
@@ -485,41 +394,38 @@ def merge_decisions(decisions):
     return [groups[s] for s in order]
 
 
-def format_block(date, short, decision):
-    """One staged block in the exact decisions.md format, or None if invalid."""
+def build_decision_row(date, short, decision):
+    """One staged decision as a validated decisions.jsonl ROW (was format_block's
+    markdown string), or None if invalid. The body is the verbatim bullet lines;
+    aios_ledger.validate_decision enforces the header shape, the bullet/note body
+    shape, and the em-dash ban."""
     title = (decision.get("title") or "").strip().rstrip(".")
     stream = (decision.get("stream") or "").strip()
     bullets = [b.strip() for b in decision.get("bullets") or [] if b.strip()]
     if not title or not stream or not bullets:
         return None
-    header = f"## {date}: {title} (session {short}, stream: {stream})"
-    if not HEADER_RE.match(header):
-        return None
     if not all(b.startswith("- **") for b in bullets):
         return None
-    return "\n".join([header, ""] + bullets)
+    body = "\n".join(bullets)
+    if aios_ledger.validate_decision(date=date, title=title, session=short,
+                                     stream=stream, body=body) is not None:
+        return None
+    return {"date": date, "title": title, "session": short,
+            "stream": stream, "body": body}
 
 
-def append_blocks(hub, blocks):
-    """Insert blocks as the newest entries in decisions.md.
-
-    Insertion point is immediately above the first `## ` block, so the file
-    header and the rotated-history section always stay above every log block.
-    """
-    if not blocks:
-        return 0
-    path = os.path.join(hub, "records", "decisions.md")
-    with open(path) as f:
-        lines = f.read().splitlines()
-    idx = next((i for i, ln in enumerate(lines) if ln.startswith("## ")),
-               len(lines))
-    insert = []
-    for b in blocks:
-        insert.extend(b.splitlines() + [""])
-    lines[idx:idx] = insert
-    with open(path, "w") as f:
-        f.write("\n".join(lines).rstrip("\n") + "\n")
-    return len(blocks)
+def append_rows(hub, rows):
+    """Append validated decision rows to decisions.jsonl (was the markdown
+    append_blocks). Idempotent per (session, stream) at the append layer;
+    returns the count actually written."""
+    n = 0
+    for row in rows:
+        ok, _reason = aios_ledger.append_decision(
+            hub, date=row["date"], title=row["title"], session=row["session"],
+            stream=row["stream"], body=row["body"])
+        if ok:
+            n += 1
+    return n
 
 
 # ---------------------------------------------------------------------------
@@ -583,19 +489,13 @@ def _genesis_folders(hub):
     return folders
 
 
-def _insert_pending_row(hub, stamp, short, label):
-    """Insert a (pending) row for short if still absent, under the ledger lock.
-    Atomic write + resort keep the newest-first contract; the under-lock
-    re-check makes a concurrent late Stop hook unable to duplicate the row."""
-    ledger_path = os.path.join(hub, "records", "sessions_index.md")
-    with ledger_lock.ledger_lock(ledger_path):
-        _, lines, sep = read_ledger(hub)
-        if sep is None or short in _ledger_shorts(lines, sep):
-            return False
-        lines.insert(sep + 1, f"| {stamp} | {short}… | (pending) | {label} |")
-        _resort_rows(lines, sep)
-        _atomic_write_lines(ledger_path, lines)
-    return True
+def _insert_pending_row(hub, stamp, sid, label):
+    """Insert a (pending) row for the session id if still absent, under the
+    sessions lock (aios_ledger.insert_pending_if_absent over sessions.jsonl).
+    The under-lock re-check makes a concurrent late Stop hook unable to
+    duplicate the row."""
+    return aios_ledger.insert_pending_if_absent(hub, session=sid, stamp=stamp,
+                                                repo=label)
 
 
 def genesis_create_rows(hub, current, now=None, dry_run=False):
@@ -609,29 +509,28 @@ def genesis_create_rows(hub, current, now=None, dry_run=False):
     session is the failure. Returns the count created."""
     now = now or datetime.datetime.now()
     cur_short = (current or "")[:8]
-    _, lines, sep = read_ledger(hub)
-    existing = _ledger_shorts(lines, sep)
+    existing = aios_ledger.session_ids(hub)
     done_dir = os.path.join(state_dir(hub), "done")
     created = 0
     for folder, label in _genesis_folders(hub):
         for path in glob.glob(os.path.join(folder, "*.jsonl")):
-            short = os.path.basename(path)[:8]
-            if cur_short and (short.startswith(cur_short)
-                              or cur_short.startswith(short)):
+            sid = os.path.basename(path)[:-len(".jsonl")]
+            if cur_short and (sid.startswith(cur_short)
+                              or cur_short.startswith(sid)):
                 continue
-            if short in existing or is_stub_transcript(path):
+            if sid in existing or is_stub_transcript(path):
                 continue
             try:
                 mtime = datetime.datetime.fromtimestamp(os.path.getmtime(path))
             except OSError:
                 continue
-            ended = bool(glob.glob(os.path.join(done_dir, short + "*")))
+            ended = bool(glob.glob(os.path.join(done_dir, sid + "*")))
             if not ended and (now - mtime) <= datetime.timedelta(hours=STALE_HOURS):
                 continue  # still live: leave it for a later sweep
             stamp = mtime.strftime("%Y-%m-%d %H%M")
-            if dry_run or _insert_pending_row(hub, stamp, short, label):
+            if dry_run or _insert_pending_row(hub, stamp, sid, label):
                 created += 1
-                existing.add(short)
+                existing.add(sid)
     return created
 
 
@@ -674,23 +573,21 @@ def _chunk(seq, size):
         yield seq[i:i + size]
 
 
-def _apply_result(hub, ledger_path, stamp, short, result, logged):
-    """Apply one session's parsed result: write its focus, stage/append its
-    decisions if cold, clear its marker. Returns True if the focus was
-    written (i.e. this session's row still had a matching pending cell)."""
-    filled = write_focus(ledger_path, short, result["focus"].strip())
+def _apply_result(hub, stamp, short, result, logged):
+    """Apply one session's parsed result: write its focus, append its decisions
+    if cold, clear its marker. Returns True if the focus was written (i.e. this
+    session's row still had a matching pending cell)."""
+    filled = write_focus(hub, short, result["focus"].strip())
     if not has_own_block(hub, short):
         date = stamp.split()[0]
-        blocks, titles = [], []
+        rows, titles = [], []
         for d in merge_decisions(result.get("decisions") or []):
-            block = format_block(date, short, d)
-            if block:
-                _stage(hub, short, block)
-                blocks.append(block)
+            row = build_decision_row(date, short, d)
+            if row:
+                rows.append(row)
                 titles.append(d.get("title", "").strip())
-        if append_blocks(hub, blocks):
+        if append_rows(hub, rows):
             logged.append({"session": short, "titles": titles})
-            _unstage(hub, short)
     clear_marker(hub, short)
     return filled
 
@@ -703,14 +600,14 @@ def sweep(hub, current, runner=default_runner, now=None, dry_run=False):
     still returns an accurate plan of what it WOULD do.
     """
     created = genesis_create_rows(hub, current, now=now, dry_run=dry_run)
-    ledger_path, lines, sep = read_ledger(hub)
     cur_short = (current or "")[:8]
     logged = []
     filled = 0
-    pending_shorts = [short for _, _, short, _ in pending_rows(lines, sep)]
+    pending = pending_rows(hub)
+    pending_ids = [sid for _, sid, _ in pending]
 
-    due = []  # [(stamp, short, repo, digest)]
-    for _, stamp, short, repo in pending_rows(lines, sep):
+    due = []  # [(stamp, sid, repo, digest)]
+    for stamp, short, repo in pending:
         if cur_short and (short.startswith(cur_short) or cur_short.startswith(short)):
             continue
         if not is_done(hub, short, stamp, now=now):
@@ -723,7 +620,7 @@ def sweep(hub, current, runner=default_runner, now=None, dry_run=False):
             # fills still-pending rows, so this is safe and idempotent) and
             # drop the marker so we stop retrying.
             if not dry_run:
-                write_focus(ledger_path, short, "(no captured turns)")
+                write_focus(hub, short, "(no captured turns)")
                 clear_marker(hub, short)
             continue
         due.append((stamp, short, repo, digest))
@@ -741,11 +638,11 @@ def sweep(hub, current, runner=default_runner, now=None, dry_run=False):
                 result = results.get(short)
                 if result is None:
                     continue  # missing from the response: retry later
-                if _apply_result(hub, ledger_path, stamp, short, result, logged):
+                if _apply_result(hub, stamp, short, result, logged):
                     filled += 1
 
     stubs = 0 if dry_run else reap_stub_transcripts(hub, current, now=now)
-    reaped = 0 if dry_run else reap_orphan_markers(hub, pending_shorts, current)
+    reaped = 0 if dry_run else reap_orphan_markers(hub, pending_ids, current)
     own = 0 if dry_run else reap_own_transcripts()
     summary = {"created": created, "filled": filled, "logged": logged,
                "noted": not logged, "reaped": reaped, "stubs": stubs,
@@ -774,20 +671,6 @@ def reap_own_transcripts():
     return n
 
 
-def _stage(hub, short, block):
-    d = os.path.join(state_dir(hub), "staging")
-    os.makedirs(d, exist_ok=True)
-    with open(os.path.join(d, short + ".md"), "a") as f:
-        f.write(block + "\n\n")
-
-
-def _unstage(hub, short):
-    try:
-        os.remove(os.path.join(state_dir(hub), "staging", short + ".md"))
-    except OSError:
-        pass
-
-
 def _write_last_run(hub, summary):
     os.makedirs(state_dir(hub), exist_ok=True)
     with open(os.path.join(state_dir(hub), "last-run.json"), "w") as f:
@@ -795,7 +678,10 @@ def _write_last_run(hub, summary):
 
 
 LEDGER_REF = "refs/ledger/checkpoints"
-LEDGER_PATHS = ["records/sessions_index.md", "records/decisions.md"]
+# Snapshot the new jsonl truth plus the legacy markdown while it still exists
+# through the bake (the present-filter below drops any that are absent).
+LEDGER_PATHS = ["records/sessions.jsonl", "records/decisions.jsonl",
+                "records/sessions_index.md", "records/decisions.md"]
 
 
 def _checkpoint_ledger(hub, dry_run=False):

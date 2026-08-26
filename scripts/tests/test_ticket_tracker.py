@@ -35,12 +35,12 @@ TODAY = date(2026, 8, 8)
 
 
 def run(issues, git_recent="", git_window="", sessions_recent="",
-        decisions_text="", existing_files=frozenset()):
+        decision_dates=None, existing_files=frozenset()):
     return tt.run_checks(
         issues,
         git_window_text=git_window,
         recent_activity_text=git_recent + "\n" + sessions_recent,
-        decisions_text=decisions_text,
+        decision_dates=decision_dates,   # {ident: date} from decisions.jsonl
         file_exists=lambda p: p in existing_files,
         today=TODAY,
     )
@@ -124,7 +124,7 @@ class SweepTest(unittest.TestCase):
             state_path = os.path.join(tmp, "state.json")
             result = tt.sweep(client, ["ExampleBoard"], state_path,
                               git_window_text="", recent_activity_text="",
-                              decisions_text="", file_exists=lambda p: False,
+                              decision_dates=None, file_exists=lambda p: False,
                               today=TODAY)
         self.assertIsNone(result["ping"])
         self.assertEqual(result["fixed"], 0)
@@ -136,7 +136,7 @@ class SweepTest(unittest.TestCase):
             state_path = os.path.join(tmp, "state.json")
             result = tt.sweep(client, ["ExampleBoard"], state_path,
                               git_window_text="PROJ-8: start",
-                              recent_activity_text="", decisions_text="",
+                              recent_activity_text="", decision_dates=None,
                               file_exists=lambda p: False, today=TODAY)
         self.assertEqual(result["fixed"], 1)
         self.assertIn(("PROJ-8", "In Progress"), client.set_calls)
