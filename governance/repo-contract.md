@@ -12,6 +12,7 @@ The per-repo shape this hub and every registered satellite must hold. Complement
 
 - CLAUDE.md and AGENTS.md carry the SAME content, via symlink (preferred) or generation, so any harness reads the same floor. The hub's real file is `AIOS.md`, with `CLAUDE.md`/`AGENTS.md`/`GEMINI.md` symlinked to it.
 - A satellite's floor is small: 3-5 never-violate rules plus a pointer table into the hub's `governance/`. Governance bodies load on demand, never all at once.
+- Required floor pointers (hygiene-enforced): the table must carry rows for `repo-contract.md`, `satellite-repos.md`, `confidentiality.md`, `ticket-tracker.md`, `communication-style.md`, `skill-authoring.md`, and `secrets.md` (credentials). A floor missing any is a finding.
 - Floor and pointers are path-relative and git-cloneable; no absolute machine paths in tracked files. The hub path resolves via the `AIOS_HUB` env var.
 
 ## Product-repo layout (satellites)

@@ -28,6 +28,7 @@ The always-loaded floor is 3-5 never-violate rules (above) plus this pointer tab
 | Ticket lifecycle (all repos) | `<hub path>/governance/ticket-tracker.md` |
 | Writing for the owner | `<hub path>/governance/communication-style.md` |
 | Skill authoring + budgets | `<hub path>/governance/skill-authoring.md` |
+| Credentials + shared secret store | `<hub path>/governance/secrets.md` |
 
 ## Records seam
 

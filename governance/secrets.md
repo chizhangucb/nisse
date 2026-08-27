@@ -21,6 +21,12 @@ Canonical is the single edit point. Consumers reach it three ways.
 - **Shell consumers**: `set -a; source ~/.secrets/shared.env; set +a`. No copy.
 - **A consumer that can only read its own env file** (some daemons regenerate their launch config and wipe injected env): its file is a DERIVED copy, pushed by a propagation script that overwrites only keys the target already declares, so per-app scoping holds. The one place a shared value is copied; never hand-edited.
 
+## Reading a key at runtime (classifier-safe)
+
+- Source the ONE var you need straight into the consuming CLI; never cat, echo, or bulk-dump the store. E.g. `set -a; source ~/.secrets/shared.env; set +a; some-cli --key "$SOME_API_KEY"`, or `KEY=$(grep -m1 '^FOO=' ~/.secrets/shared.env | cut -d= -f2-) some-cli`.
+- A confidentiality scan that blocks harvesting-shaped reads (printing a secrets file, echoing keys, mass env dumps) will fail those; narrow single-var use passes. Do not route around it.
+- A stored key is not a working key: verify it authenticates with a real call (an API ping, a 200) before trusting or reporting it live.
+
 ## Rotating a shared key
 
 1. Edit the value in `~/.secrets/shared.env`.

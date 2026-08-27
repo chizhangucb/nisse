@@ -59,6 +59,7 @@ BUDGET_EXACT = {
     "README.md": 800,
     "operations.md": 3200,
     "governance/repo-contract.md": 900,
+    "governance/secrets.md": 600,        # credential-store floor + classifier-safe access lesson
     "governance/gating.md": 1150,
     "governance/routing.md": 1000,
     "governance/building.md": 750,
@@ -580,6 +581,7 @@ def check_taxonomy():
             _check_test_layout(label, root)
             _check_satellite_claude_budget(label, root)
             _check_agents_parity(label, root)
+            _check_floor_pointers(label, root)
 
 
 def _check_claude_machinery_only(label, root):
@@ -775,6 +777,31 @@ def _check_agents_parity(label, root):
         add("MED", "judgment", "structural",
             f"[{label}] AGENTS.md floor missing or out of parity with CLAUDE.md "
             "(repo-contract.md)", f"{_disp(root)}AGENTS.md")
+
+
+# repo-contract.md "Thin always-loaded floor": every satellite floor table must
+# carry a pointer row for each of these governance bodies. Matched by the
+# `governance/<name>` target so the hub-path prefix convention is irrelevant.
+REQUIRED_FLOOR_POINTERS = (
+    "repo-contract.md", "satellite-repos.md", "confidentiality.md",
+    "ticket-tracker.md", "communication-style.md", "skill-authoring.md",
+    "secrets.md",
+)
+
+
+def _check_floor_pointers(label, root):
+    """repo-contract.md: a satellite floor table must carry a pointer row for
+    each REQUIRED_FLOOR_POINTERS governance body, matched by its
+    `governance/<name>` target so the hub-path prefix does not matter."""
+    text = _repo_claude_text(root)
+    if not text:
+        return   # a missing CLAUDE.md is the parity check's finding, not double-flagged here
+    missing = [p for p in REQUIRED_FLOOR_POINTERS if f"governance/{p}" not in text]
+    if missing:
+        add("MED", "judgment", "structural",
+            f"[{label}] floor table missing required pointer(s): "
+            f"{', '.join(missing)} (repo-contract.md required floor pointers)",
+            f"{_disp(root)}CLAUDE.md")
 
 
 # ---- group 6: wiki health ---------------------------------------------------
