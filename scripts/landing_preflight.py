@@ -100,15 +100,18 @@ def run_preflight(repo=".", target="origin/main", fetch=True):
         ) or ""
         conflicts = [ln.strip() for ln in unmerged.splitlines() if ln.strip()]
     finally:
-        # Restore on every path. merge --abort is a no-op-error when the merge
-        # was "Already up to date" (no MERGE_HEAD); swallow that, then verify.
+        # Cleanup only. Never raise from a finally (it would mask a try-block
+        # error): the HEAD check is done after this block, below. merge --abort
+        # is a no-op-error when the merge was "Already up to date" (no
+        # MERGE_HEAD); swallow that.
         _git(repo, ["merge", "--abort"], allow_fail=True)
-        head_after = _git(repo, ["rev-parse", "HEAD"], allow_fail=True)
-        if head_after != head_before:
-            raise RuntimeError(
-                f"staleness guard left HEAD moved ({head_before} -> "
-                f"{head_after}); investigate manually"
-            )
+    # Verify restoration after the finally.
+    head_after = _git(repo, ["rev-parse", "HEAD"], allow_fail=True)
+    if head_after != head_before:
+        raise RuntimeError(
+            f"staleness guard left HEAD moved ({head_before} -> "
+            f"{head_after}); investigate manually"
+        )
 
     return {
         "target": target, "behind": behind, "ahead": ahead, "stale": True,
