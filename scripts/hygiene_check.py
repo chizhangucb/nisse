@@ -58,7 +58,7 @@ BUDGET_EXACT = {
     "wiki/rules.md": 400,
     "README.md": 800,
     "operations.md": 3200,
-    "governance/repo-contract.md": 900,
+    "governance/repo-contract.md": 1000,  # +100: no-orphan rule + exclusion list
     "governance/secrets.md": 600,        # credential store + classifier-safe access
     "governance/gating.md": 1150,
     "governance/routing.md": 1000,
@@ -570,6 +570,8 @@ def check_taxonomy():
                 "(decisions, sessions, brainstorms, reports)",
                 f"records/{name}")
 
+    _check_floor_orphans()   # no governance doc orphaned from the floor
+
     for label, root in [("hub", ROOT)] + _satellite_roots():
         _check_claude_machinery_only(label, root)
         _check_graphify_symlink(label, root)
@@ -782,11 +784,34 @@ def _check_agents_parity(label, root):
 # repo-contract.md "Thin always-loaded floor": every satellite floor table must
 # carry a pointer row for each of these governance bodies. Matched by the
 # `governance/<name>` target so the hub-path prefix convention is irrelevant.
+# building, tool-actions, and gating are operating obligations every session
+# needs up front (plan/land discipline, the auto/confirm/escalate tool table,
+# and the immovable gating floors); a load-bearing doc only reliably loads as a
+# floor row, not by transitive reference.
 REQUIRED_FLOOR_POINTERS = (
     "repo-contract.md", "satellite-repos.md", "confidentiality.md",
     "ticket-tracker.md", "communication-style.md", "skill-authoring.md",
-    "secrets.md",
+    "secrets.md", "building.md", "tool-actions.md", "gating.md",
 )
+
+# No-orphan floor guarantee: every governance/*.md is EITHER a required floor
+# pointer above OR listed here with a reason (on-demand / owned-elsewhere). A
+# governance doc that is neither fails `_check_floor_orphans`, so a load-bearing
+# rule can never silently fall out of the floor. Values are the documented
+# reason a doc is intentionally NOT a floor row. The test is load-bearing-ness,
+# not dormancy: ticket-tracker is dormant-until-wired too, yet it is an
+# obligation and stays floor-required.
+EXCLUDED_FLOOR_POINTERS = {
+    "routing.md": "on-demand: governs only metered model-routing; the harness's "
+                  "own model needs no router, and the confidentiality posture is "
+                  "owned by confidentiality.md (a floor doc)",
+    "design-rubric.md": "on-demand UI rubric, loaded before building or "
+                        "reshaping any interface",
+    "lessons.md": "on-demand cross-project lessons catch-all, not an obligation",
+    "memory-promotion.md": "on-demand: the promotion pipeline (/promote) loads "
+                           "it when it runs; its confidentiality floor is owned "
+                           "by confidentiality.md (a floor doc)",
+}
 
 
 def _check_floor_pointers(label, root):
@@ -802,6 +827,38 @@ def _check_floor_pointers(label, root):
             f"[{label}] floor table missing required pointer(s): "
             f"{', '.join(missing)} (repo-contract.md required floor pointers)",
             f"{_disp(root)}CLAUDE.md")
+
+
+def _check_floor_orphans():
+    """No-orphan floor guarantee (repo-scoped, runs once): every
+    governance/*.md must be EITHER a required floor pointer OR on the documented
+    EXCLUDED_FLOOR_POINTERS list. A doc that is neither is a load-bearing rule
+    no session is guaranteed to load (the failure mode a floor exists to
+    prevent), so it fails HIGH. README.md is the folder index, not a rule doc,
+    so it is never a floor pointer and never an orphan. Also flags a stale
+    REQUIRED/EXCLUDED entry whose file no longer exists, keeping the
+    classification honest as governance docs are added or removed."""
+    gov = os.path.join(ROOT, "governance")
+    if not os.path.isdir(gov):
+        return
+    present = {name for name in os.listdir(gov)
+               if name.endswith(".md") and name != "README.md"
+               and os.path.isfile(os.path.join(gov, name))}
+    classified = set(REQUIRED_FLOOR_POINTERS) | set(EXCLUDED_FLOOR_POINTERS)
+    orphans = sorted(present - classified)
+    if orphans:
+        add("HIGH", "judgment", "structural",
+            "governance doc(s) reachable from no floor and not on the documented "
+            f"exclusion list: {', '.join(orphans)}. Classify each in "
+            "scripts/hygiene_check.py (REQUIRED_FLOOR_POINTERS or "
+            "EXCLUDED_FLOOR_POINTERS) and governance/repo-contract.md "
+            "(no-orphan floor guarantee)", "governance/")
+    stale = sorted(classified - present)
+    if stale:
+        add("LOW", "judgment", "structural",
+            "floor-pointer classification names a missing governance doc: "
+            f"{', '.join(stale)} (drop it from REQUIRED/EXCLUDED_FLOOR_POINTERS)",
+            "scripts/hygiene_check.py")
 
 
 # ---- group 6: wiki health ---------------------------------------------------
