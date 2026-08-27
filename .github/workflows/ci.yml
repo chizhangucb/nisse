@@ -1,0 +1,74 @@
+# Gate `main` on tests, lint, and the confidentiality guard.
+#
+# nisse is stdlib-only Python; there is no build step and no browser. Each job
+# is a required status check on `main` (branch protection references the bare
+# job ids: test, lint, confidentiality). Keep the ids stable — renaming one
+# leaves a required check that never reports, and every PR then hangs.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pytest
+        run: python -m pip install --upgrade pip pytest
+      - name: Run tests
+        run: python -m pytest scripts/tests/ -q
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install ruff
+        run: python -m pip install --upgrade pip ruff
+      - name: Ruff
+        run: ruff check .
+
+  confidentiality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Confidentiality guard
+        run: python3 scripts/confidentiality_guard.py
+
+  # Pre-PR staleness guard: fail a PR whose branch is behind origin/main, so a
+  # stale branch is caught before it surfaces as a surprise DIRTY conflict at
+  # merge time. Backs the repo's landing discipline (governance/building.md:
+  # rebase onto current main + dry-run the merge); the unskippable version of
+  # that step. PR-only: a push to main can't be behind itself. Checks out the PR
+  # HEAD (not the merge ref) with full history so the guard can compare against
+  # and dry-run-merge origin/main. Stdlib Python, no deps.
+  staleness:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Staleness guard (behind-main + conflict map)
+        run: python3 scripts/landing_preflight.py

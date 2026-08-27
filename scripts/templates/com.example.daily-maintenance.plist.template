@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Example macOS launchd job for scripts/daily_maintenance.py (DORMANT
+  EXAMPLE). Nothing installs or loads this automatically -- copy it, fill in
+  the placeholders, and load it yourself if you want the example wired up
+  for real. It ships dormant on purpose (operations.md Scheduled tasks
+  starts empty).
+
+  __HOME__ and __REPO__ are placeholders:
+    __HOME__  your home directory (macOS: /Users/<you>, e.g. $HOME)
+    __REPO__  the absolute path to this repo checkout
+
+  To wire it up:
+    1. cp scripts/templates/com.example.daily-maintenance.plist.template \
+          ~/Library/LaunchAgents/com.example.daily-maintenance.plist
+    2. Replace __HOME__ and __REPO__ with real paths in the copy (sed or by
+       hand). Also rename the Label if you want a project-specific reverse-DNS
+       name instead of com.example.*.
+    3. launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.example.daily-maintenance.plist
+    4. Kickstart once to test: launchctl kickstart -k gui/$(id -u)/com.example.daily-maintenance
+
+  On Linux, use cron instead of launchd; the equivalent crontab line is:
+    0 9 * * *  cd __REPO__ && /usr/bin/env python3 scripts/daily_maintenance.py >> .tmp/daily_maintenance/cron.log 2>&1
+
+  Runs scripts/daily_maintenance.py directly: NO LLM call, all deterministic
+  Python. Any connector keys the stages need (e.g. LINEAR_API_KEY for the
+  tracker-drift stage) load from .env inside the script itself.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.example.daily-maintenance</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/env</string>
+        <string>python3</string>
+        <string>__REPO__/scripts/daily_maintenance.py</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>__REPO__</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>9</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>__REPO__/.tmp/daily_maintenance/launchd.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>__REPO__/.tmp/daily_maintenance/launchd.log</string>
+</dict>
+</plist>

@@ -1,0 +1,32 @@
+# secrets never enter git; see governance/secrets.md
+.env
+.env.local
+
+.DS_Store
+*.log
+__pycache__/
+node_modules/
+.claude/settings.local.json
+
+# harness runtime state (hook markers, locks)
+.claude/state/
+
+# session-ledger cross-process lock + transient write files
+records/.sessions.lock
+records/*.jsonl.tmp
+wiki/metadata/*.jsonl.tmp
+
+# scratch and one-off files
+.tmp/
+
+# verbatim meeting transcripts stay local-only; see governance/confidentiality.md
+wiki/raw/transcripts/*
+!wiki/raw/transcripts/.gitkeep
+# the one shipped FAKE example transcript (delete with the example pages)
+!wiki/raw/transcripts/2026-01-05_example_weekly_sync.md
+
+# knowledge-graph artifacts are generated; the registry graphs/index.json IS committed
+/graphify-out
+graphs/*/graphify-out/
+graphs/*/graphify-out
+.claude/worktrees/
