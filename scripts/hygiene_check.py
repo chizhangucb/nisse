@@ -59,7 +59,7 @@ BUDGET_EXACT = {
     "README.md": 800,
     "operations.md": 3200,
     "governance/repo-contract.md": 900,
-    "governance/secrets.md": 600,        # credential-store floor + classifier-safe access lesson
+    "governance/secrets.md": 600,        # credential store + classifier-safe access
     "governance/gating.md": 1150,
     "governance/routing.md": 1000,
     "governance/building.md": 750,
@@ -795,7 +795,7 @@ def _check_floor_pointers(label, root):
     `governance/<name>` target so the hub-path prefix does not matter."""
     text = _repo_claude_text(root)
     if not text:
-        return   # a missing CLAUDE.md is the parity check's finding, not double-flagged here
+        return   # a missing CLAUDE.md is the parity check's finding
     missing = [p for p in REQUIRED_FLOOR_POINTERS if f"governance/{p}" not in text]
     if missing:
         add("MED", "judgment", "structural",

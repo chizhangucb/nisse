@@ -27,8 +27,9 @@ class TestBudgetFor(unittest.TestCase):
             hc._budget_for("skills/wiki-ingest/references/walkthrough.md"))
 
     def test_governance_default(self):
-        self.assertEqual(hc._budget_for("governance/secrets.md"), 500)
+        self.assertEqual(hc._budget_for("governance/communication-style.md"), 500)
         self.assertEqual(hc._budget_for("governance/gating.md"), 1150)
+        self.assertEqual(hc._budget_for("governance/secrets.md"), 600)
 
     def test_lessons_exact_budget(self):
         # governance/lessons.md is exact-capped, not the governance/ default
