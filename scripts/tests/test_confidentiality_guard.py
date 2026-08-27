@@ -87,6 +87,18 @@ class TestGuard(unittest.TestCase):
         self.addCleanup(self._clean, root)
         self.assertEqual(cg.run_checks(root), [])
 
+    def test_committed_secret_shape_fails(self):
+        root = _make_repo({"conf.md": "token: ghp_" + "a1B2" * 6 + "\n"})
+        self.addCleanup(self._clean, root)
+        findings = cg.run_checks(root)
+        self.assertTrue(any("secret shape" in f for f in findings), findings)
+
+    def test_secret_shape_in_guard_own_file_excluded(self):
+        root = _make_repo({
+            "scripts/confidentiality_guard.py": "sk-" + "a" * 20 + "\n"})
+        self.addCleanup(self._clean, root)
+        self.assertEqual(cg.run_checks(root), [])
+
     def test_leaked_tracker_id_fails(self):
         root = _make_repo({"notes.md": f"see {TRACKER_ID} for context\n"})
         self.addCleanup(self._clean, root)

@@ -2,10 +2,14 @@
 """Confidentiality guard for CI.
 
 Deterministic, read-only. Fails the build (exit 1) if a tracked file leaks an
-owner absolute home path or a private issue-tracker id, if a shipped
-example/fixture file has lost its "this is synthetic" marker, or if `.gitignore`
-stops covering the local-only data and config that must never enter git. Green
-output and exit 0 when clean.
+owner absolute home path, a private issue-tracker id, or a committed secret
+shape (API key / token / private-key block), if a shipped example/fixture file
+has lost its "this is synthetic" marker, or if `.gitignore` stops covering the
+local-only data and config that must never enter git. Green output and exit 0
+when clean. The owner's confidential VOCABULARY (names, venture/wiki slugs, deal
+markers) and the high-entropy heuristic are deliberately NOT here: enumerating
+them in a public repo would itself leak, and entropy false-positives on
+lockfiles; that richer scan stays client-side in the hub egress gate.
 
 Reuses `hygiene_check.py`'s machinery (read_text) rather than re-deriving it.
 Stdlib only; defensive (a broken check degrades to a finding, never a crash).
@@ -72,6 +76,21 @@ REQUIRED_GITIGNORE = (
 SKIP_SCAN_SUFFIXES = (".png", ".jpg", ".jpeg", ".gif", ".pdf", ".ico",
                       ".zip", ".gz", ".woff", ".woff2", ".ttf")
 
+# Committed-secret SHAPES: an accidentally-pasted real credential is the worst
+# thing that can land in a public repo, so the guard blocks these generic
+# key/token shapes server-side (they name nothing owner-specific, so unlike the
+# owner's confidential VOCABULARY they are safe to enumerate in public code). The
+# hub's richer, owner-specific + high-entropy scan stays client-side (it would
+# either self-leak the vocabulary or false-positive on lockfiles here).
+SECRET_SHAPES = tuple(re.compile(p) for p in (
+    r"\bsk-[A-Za-z0-9_-]{16,}",
+    r"\bgh[pousr]_[A-Za-z0-9]{16,}",
+    r"\bAKIA[0-9A-Z]{16}\b",
+    r"\bxox[baprs]-[A-Za-z0-9-]+",
+    r"-----BEGIN [A-Z ]*PRIVATE KEY-----",
+    r"\beyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}",  # JWT (2+ segments)
+))
+
 
 def tracked_files(root):
     """Repo-relative paths of git-tracked files. Empty on any git failure
@@ -122,6 +141,25 @@ def check_tracker_ids(root, rels, findings):
                     f"{line.strip()[:80]}")
 
 
+def check_secret_shapes(root, rels, findings):
+    """Block a committed credential shape (API key, token, private-key block) in
+    any tracked file. The guard's own files (which spell the patterns) are
+    excluded via _excluded()."""
+    for rel in rels:
+        if _excluded(rel) or rel.endswith(SKIP_SCAN_SUFFIXES):
+            continue
+        text = read_text(os.path.join(root, rel))
+        if text is None:
+            continue
+        for i, line in enumerate(text.splitlines(), 1):
+            for rx in SECRET_SHAPES:
+                if rx.search(line):
+                    findings.append(
+                        f"committed secret shape leaked at {rel}:{i}: "
+                        f"{line.strip()[:80]}")
+                    break
+
+
 def check_synthetic_markers(root, findings):
     for rel in SYNTHETIC_FIXTURES:
         path = os.path.join(root, rel)
@@ -156,6 +194,7 @@ def run_checks(root):
         return findings
     check_home_paths(root, rels, findings)
     check_tracker_ids(root, rels, findings)
+    check_secret_shapes(root, rels, findings)
     check_synthetic_markers(root, findings)
     check_gitignore(root, findings)
     return findings
