@@ -114,5 +114,67 @@ class TestParsers(unittest.TestCase):
         self.assertIn("NOTICE.md", hc.HUB_ROOT_MD)
 
 
+class TestFloorOrphans(unittest.TestCase):
+    """No-orphan floor guarantee: every governance/*.md is a required floor
+    pointer or a documented exclusion; a doc that is neither fails HIGH.
+    README.md is the folder index, never an orphan."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix="hygiene_orphans_test_")
+        self._old_root = hc.ROOT
+        hc.ROOT = self.tmp
+        hc.findings.clear()
+        os.makedirs(os.path.join(self.tmp, "governance"), exist_ok=True)
+
+    def tearDown(self):
+        hc.ROOT = self._old_root
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def _write_gov(self, name, text="# doc\n"):
+        with open(os.path.join(self.tmp, "governance", name), "w",
+                  encoding="utf-8") as f:
+            f.write(text)
+
+    def _messages(self):
+        return [f[3] for f in hc.findings]
+
+    def test_classified_docs_and_readme_are_clean(self):
+        # every classified doc present + a README (the folder index) -> no
+        # orphan and no stale finding
+        for name in list(hc.REQUIRED_FLOOR_POINTERS) + list(
+                hc.EXCLUDED_FLOOR_POINTERS):
+            self._write_gov(name)
+        self._write_gov("README.md", "# Governance index\n")
+        hc._check_floor_orphans()
+        msgs = self._messages()
+        self.assertFalse(any("reachable from no floor" in m for m in msgs), msgs)
+        self.assertFalse(any("README.md" in m for m in msgs), msgs)
+        self.assertFalse(any("names a missing governance doc" in m
+                             for m in msgs), msgs)
+
+    def test_unclassified_doc_fails_high(self):
+        for name in list(hc.REQUIRED_FLOOR_POINTERS) + list(
+                hc.EXCLUDED_FLOOR_POINTERS):
+            self._write_gov(name)
+        self._write_gov("neworphan.md", "# unclassified\n")
+        hc._check_floor_orphans()
+        orphan = [f for f in hc.findings if "reachable from no floor" in f[3]]
+        self.assertTrue(orphan, "expected an orphan finding")
+        self.assertEqual(orphan[0][0], "HIGH")
+        self.assertIn("neworphan.md", orphan[0][3])
+        # a classified doc is never called an orphan
+        self.assertFalse(any("secrets.md" in f[3] or "routing.md" in f[3]
+                             for f in orphan), orphan)
+
+    def test_stale_classification_entry_is_low(self):
+        # a classified name with no file present -> LOW stale finding
+        self._write_gov("repo-contract.md")
+        hc._check_floor_orphans()
+        stale = [f for f in hc.findings
+                 if "names a missing governance doc" in f[3]]
+        self.assertTrue(stale, "expected a stale-entry finding")
+        self.assertEqual(stale[0][0], "LOW")
+
+
 if __name__ == "__main__":
     unittest.main()
