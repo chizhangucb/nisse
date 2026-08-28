@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${AIOS_HUB:-$HOME/chizhang-2}/.claude/hooks/branch-guard.py\" check 2>/dev/null || true",
+            "command": "python3 \"${AIOS_HUB:-$HOME/aios-hub}/.claude/hooks/branch-guard.py\" check 2>/dev/null || true",
             "timeout": 10,
             "statusMessage": "Branch guard: checking commit branch"
           }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${AIOS_HUB:-$HOME/chizhang-2}/.claude/hooks/ledger-guard.py\"",
+            "command": "python3 \"${AIOS_HUB:-$HOME/aios-hub}/.claude/hooks/ledger-guard.py\"",
             "timeout": 10,
             "statusMessage": "Ledger guard: routing writes through the append command"
           }
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${AIOS_HUB:-$HOME/chizhang-2}/.claude/hooks/session-ledger.py\" 2>/dev/null || true",
+            "command": "python3 \"${AIOS_HUB:-$HOME/aios-hub}/.claude/hooks/session-ledger.py\" 2>/dev/null || true",
             "timeout": 10,
             "statusMessage": "Updating hub session ledger"
           }
@@ -41,25 +41,25 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${AIOS_HUB:-$HOME/chizhang-2}/.claude/hooks/session-close-spawn.py\" 2>/dev/null || true",
+            "command": "python3 \"${AIOS_HUB:-$HOME/aios-hub}/.claude/hooks/session-close-spawn.py\" 2>/dev/null || true",
             "timeout": 10,
             "statusMessage": "Spawning session-close sweeper"
           },
           {
             "type": "command",
-            "command": "python3 \"${AIOS_HUB:-$HOME/chizhang-2}/.claude/hooks/branch-guard.py\" pin 2>/dev/null || true",
+            "command": "python3 \"${AIOS_HUB:-$HOME/aios-hub}/.claude/hooks/branch-guard.py\" pin 2>/dev/null || true",
             "timeout": 10,
             "statusMessage": "Branch guard: pinning session branch"
           },
           {
             "type": "command",
-            "command": "python3 \"${AIOS_HUB:-$HOME/chizhang-2}/.claude/hooks/worktree-nudge.py\" 2>/dev/null || true",
+            "command": "python3 \"${AIOS_HUB:-$HOME/aios-hub}/.claude/hooks/worktree-nudge.py\" 2>/dev/null || true",
             "timeout": 10,
             "statusMessage": "Worktree nudge: checking tree contention"
           },
           {
             "type": "command",
-            "command": "python3 \"${AIOS_HUB:-$HOME/chizhang-2}/.claude/hooks/session-obligations.py\" 2>/dev/null || true",
+            "command": "python3 \"${AIOS_HUB:-$HOME/aios-hub}/.claude/hooks/session-obligations.py\" 2>/dev/null || true",
             "timeout": 10,
             "statusMessage": "Session obligations reminder"
           }
@@ -71,7 +71,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${AIOS_HUB:-$HOME/chizhang-2}/.claude/hooks/session-close-marker.py\" 2>/dev/null || true",
+            "command": "python3 \"${AIOS_HUB:-$HOME/aios-hub}/.claude/hooks/session-close-marker.py\" 2>/dev/null || true",
             "timeout": 10,
             "statusMessage": "Marking session done"
           }
