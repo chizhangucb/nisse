@@ -13,11 +13,16 @@ digest, the digest sends through a single gated notification path
 (scripts/egress_gate/egress.py's `tracker-ping` verb -- reuses the same path
 scripts/ticket_tracker.py uses for its own ping).
 
-Stages wired here (both are dormant tier-2/tier-3 pieces you may not have
-configured yet, so an unconfigured stage is reported as skipped, not failed):
+Stages wired here (the first two are dormant tier-2/tier-3 pieces you may
+not have configured yet, so an unconfigured stage is reported as skipped,
+not failed):
   - hygiene: scripts/hygiene_check.py's findings, counted by severity.
   - tracker drift: scripts/ticket_tracker.py --sweep (only if
     NISSE_TRACKER_DRIFT=1 and TICKET_TRACKER_PROJECTS is set).
+  - daily digest: scripts/emit_daily_digest.py writes one small JSON
+    artifact into the hub's records/spool/nisse/ so this repo's run folds
+    into the hub's fleet digest instead of a separate channel. Local-only
+    (git signals), never blocked by hub/network availability.
 
 Adapt this by adding your own stage_*(root) function that returns a Stage,
 and listing it in run_stages(). A cron/launchd template for wiring this up
@@ -38,6 +43,7 @@ import sys
 from datetime import date
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import emit_daily_digest  # noqa: E402  (hub spool writer)
 import hygiene_check  # noqa: E402  (imported, not subprocessed: it's a pure function)
 import ticket_tracker  # noqa: E402  (shared _send_ping)
 
@@ -126,10 +132,26 @@ def stage_tracker_drift(root):
     return s
 
 
+def stage_daily_digest(root):
+    """Write this run's small JSON artifact into the hub's
+    records/spool/nisse/, so a satellite daily run folds into the hub's one
+    fleet digest. Local git signals only; failure here (e.g. hub path
+    unwritable) is caught and reported, never sinks the other stages."""
+    s = Stage("daily digest")
+    try:
+        path = emit_daily_digest.emit(root)
+        s.status = "ok"
+        s.text = f"daily digest: wrote {path}"
+    except Exception as e:  # noqa: BLE001  a stage never sinks the run
+        s.status = "failed"
+        s.error = "%s: %s" % (type(e).__name__, e)
+    return s
+
+
 def run_stages(root):
     """Run every stage in order. Add your own stage function here to extend
     the example."""
-    return [stage_hygiene(root), stage_tracker_drift(root)]
+    return [stage_hygiene(root), stage_tracker_drift(root), stage_daily_digest(root)]
 
 
 def assemble(today, stages):
@@ -139,7 +161,7 @@ def assemble(today, stages):
     parts = ["Daily maintenance (example) %s" % today.isoformat()]
 
     any_content = False
-    for name in ("hygiene", "tracker drift"):
+    for name in ("hygiene", "tracker drift", "daily digest"):
         s = by[name]
         if s.status == "ok" and s.text:
             parts += ["", "[ %s ]" % name, s.text]
