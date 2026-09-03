@@ -8,7 +8,7 @@ This file is a map. Each line points at the source of truth; nothing is restated
 
 ## Rules, always in effect
 
-`governance/`: `communication-style.md` (how to write for the owner), `confidentiality.md` (what never leaves; read before anything external), `tool-actions.md` (free vs confirm-first vs escalate), `gating.md` (the one gating model: 4 outcome levels, action table, immovable floors), `building.md` (plan-first, workstate checkpoints, validate claims against primary docs; binds every agent), `repo-contract.md` (the layout contract for this repo and any satellite), `satellite-repos.md` (how repos outside this hub relate to it), `ticket-tracker.md` (ticket lifecycle if a tracker is wired), `skill-authoring.md` (how skills get built), `secrets.md` (where credentials live), `routing.md` (which model may touch a task; dormant until you wire a router), `design-rubric.md` (UI/design rules, on-demand, load before building or reshaping any UI), `lessons.md` (capped catch-all for domain-less cross-project lessons), `memory-promotion.md` (capture-to-promote pipeline: surfaces, routing, cadence; dormant until you wire the executor, see `skills/promote/`).
+`governance/`: `communication-style.md` (how to write for the owner), `confidentiality.md` (what never leaves; read before anything external), `tool-actions.md` (free vs confirm-first vs escalate), `gating.md` (the one gating model: 4 outcome levels, action table, immovable floors), `building.md` (plan-first, workstate checkpoints, validate claims against primary docs; binds every agent), `repo-contract.md` (the layout contract for this repo and any satellite), `satellite-repos.md` (how repos outside this hub relate to it), `ticket-tracker.md` (ticket lifecycle if a tracker is wired), `skill-authoring.md` (how skills get built), `secrets.md` (where credentials live), `routing.md` (which model may touch a task; dormant until you wire a router), `design-rubric.md` (UI/design rules, on-demand, load before building or reshaping any UI), `lessons.md` (capped catch-all for domain-less cross-project lessons), `memory-promotion.md` (capture-to-promote pipeline: surfaces, routing, cadence; dormant until you wire the executor).
 
 ## The map
 
@@ -23,11 +23,11 @@ This file is a map. Each line points at the source of truth; nothing is restated
 - `contacts/`: the local contact store, one YAML per person plus `_not_names.yml` (transcription artifacts that are not names).
 - `references/`: lookup artifacts you read to do work (voice notes, frameworks, API guides), plus `references/templates/`. Not accumulated records.
 - `archives/`: retired material, mirrored paths for straight-reverse restores.
-- `skills/`: the skills (`.claude/skills` symlinks here). Real skills (judgment): `/wiki-ingest`, `/wiki-distill`, `/wiki-triage`, `/grill-me`, `/handoff`. Stubs (routing to scripts): `/hygiene`, `/wiki-retranscribe` (tier-2, needs a key), `/promote` (tier-3, ships dormant, see `skills/promote/README.md`). Each skill's description says when it triggers; don't restate them.
+- `skills/`: the skills (`.claude/skills` symlinks here). The wiki loop (judgment): `/wiki-ingest`, `/wiki-distill`, `/wiki-triage`, plus `/wiki-retranscribe` (tier-2 stub, routes to `scripts/wiki_retranscribe.py`, needs a key). Each skill's description says when it triggers; don't restate them.
 
 ## Dormant until wired (tier 3)
 
-Egress gate (`scripts/egress_gate/README.md`), model routing (`governance/routing.md` + `scripts/litellm/README.md`), knowledge graphs (`scripts/graphify/README.md`), spoke pattern (`references/spoke-pattern.md`), memory promotion (`governance/memory-promotion.md` + `skills/promote/README.md`). Each README is its own wiring guide; setup never touches them.
+Egress gate (`scripts/egress_gate/README.md`), model routing (`governance/routing.md` + `scripts/litellm/README.md`), knowledge graphs (`scripts/graphify/README.md`), spoke pattern (`references/spoke-pattern.md`), memory promotion (`governance/memory-promotion.md`). Each README is its own wiring guide; setup never touches them.
 
 ## How you work with the owner
 

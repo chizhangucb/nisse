@@ -1,6 +1,6 @@
 # Memory promotion
 
-> **Tier 3, ships dormant.** The autonomous job described below does not run until you build or port an executor. The manual-override skill (`/promote`) and its wiring note live in `skills/promote/`. Until then, use the routing rule here by hand whenever you or your assistant notice something durable.
+> **Tier 3, ships dormant.** The autonomous job described below does not run until you build or port an executor, and no manual-override skill ships with this repo. Until then, use the routing rule here by hand whenever you or your assistant notice something durable.
 
 Owns the capture-to-promote pipeline: where captured memory comes from, where the next lesson goes, the promotion cadence, and how promotion targets stay clean. Governs promotion of captured memory only. The system's other promotions (wiki raw to truth, plan to archive, project lifecycle) keep their own homes.
 
@@ -29,7 +29,6 @@ Promotion is meant to be autonomous, not approval-gated, once an executor exists
 - **Detect + queue (daily, deterministic, no model):** a daily sweep classifies changed memory files and queues promotions in a pending-promotions file.
 - **Act (daily job, a capable mid-tier model):** reads the queue and auto-applies each promotion per the routing rule above. One git commit per promotion (the audit trail; one-command revert). Empty queue skips the model.
 - **Report (FYI, not approval):** an exception-based notification through whatever surface you've wired (`operations.md`) when something moved: what moved, from where, and the revert command. Never blocks.
-- **`/promote`:** manual override on the same code path, usable by hand today even without the daily job.
 
 Two guardrails stay (automatic, safety not friction):
 
