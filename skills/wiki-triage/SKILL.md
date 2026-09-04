@@ -5,7 +5,7 @@ description: Promote wiki evidence into current truth and keep the wiki semantic
 
 Interactive session: **scope → sweep → recap → queue → lint → write → report**. Weekly-ish; the one wiki operation that is a conversation, not a batch.
 
-Read `wiki/CLAUDE.md`, `wiki/rules.md`, and `references/triage-rules.md` first, in full. Precedence: schema > shared rules > skill rules > this file.
+Read `wiki/AGENTS.md` and `references/triage-rules.md` first, in full. Precedence: schema > skill rules > this file.
 
 ## Is / is not
 

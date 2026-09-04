@@ -1,19 +1,20 @@
 ---
 type: source
 tags: []                # 3-5 canonical slugs from wiki/metadata/tag_registry.md
-project:                # your axis values, e.g. work | side_projects | health | life
+project:                # work | personal | health | life
 created:
 ingested:
 origin:                 # capture-tool URL or raw/transcripts/ path
-via:                    # connector name | paste | file
-retrieval:              # full | partial
+via:                    # fireflies | clipper | fetcher | paste
+retrieval:              # full | partial | excerpts
 storage: verbatim       # meetings are always verbatim; digest only if no transcript retrievable
 distilled:              # empty = awaiting wiki-distill; set to date when distilled
 class: primary
-confidential:           # empty, or a list of your lenses from docs/confidentiality.md, most sensitive first
+confidential:           # empty, or a list: [finance] | [personnel] | [legal] | [finance, personnel] ...
 participants: []
 context:                # internal | external
 meeting_type:           # 1:1 | team | leadership | customer | partner | vendor | investor | interview
+# recovered:            # only on retranscribed sources; a block with engine + date subkeys
 ---
 
 # Context
@@ -69,7 +70,7 @@ meeting_type:           # 1:1 | team | leadership | customer | partner | vendor 
 
 Primary distill input. Extract generously, with attribution; subtle or ambiguous signals included.
 
-<!-- Format: - **[[target_page]]** | Speaker (MM:SS-MM:SS): signal
+<!-- Format: - **[[target]]** | Speaker (MM:SS-MM:SS): signal
      Several targets separate with commas before the pipe.
      Target is the page this most likely feeds. **target unclear** is allowed and is often the
      interesting one; a signal may name several targets. The target is a hint for wiki-distill,
@@ -80,8 +81,8 @@ Primary distill input. Extract generously, with attribution; subtle or ambiguous
 # Transcript Link
 
 -
-<!-- Tool-pointer line + `Raw mirror:` line. Pointer = `<Tool>: <url>` or `<Tool>: no shareable
-     URL; file ID <id>`. -->
+<!-- Tool-pointer line + `Raw mirror:` + `Excluded captures:`. Pointer = `<Tool>: <url>`, or
+     `<Tool>: no shareable URL; file ID <id>` when the capture tool exposes none. -->
 
 <!-- One callout, only if any caveat applies. Blank line before and after the whole block; a bare
      `>` line between each labelled section. Labels in this order; drop the ones that do not:
@@ -90,13 +91,11 @@ Primary distill input. Extract generously, with attribution; subtle or ambiguous
 > **Retrieval:** two sentences, hard cap. What is covered, what is missing, one clause of why, and
 > "unknown, not absent" when a chunk is lost. No capture IDs or retry counts.
 >
-> **Speaker labels unreliable:** attribution or dedupe problems that qualify the whole page, or no
-> diarization; attributions are then content-inference.
+> **Speaker labels unreliable:** attribution or dedupe problems that qualify the whole page, or no diarization at all (the capture carries no speaker field); attributions are then content-inference.
 >
 > **Name gaps:**
 > - proper nouns the capture rendered unreliably: variants, best read, for distill to resolve
-> - anonymous speakers the knowledge layer supports a read for: `Speaker N = likely <Name>` tagged
->   `**speaker best-guess (low confidence)**` (rule in wiki-ingest `references/ingest-rules.md`)
+> - anonymous speakers the knowledge layer supports a read for: `Speaker N = likely <Name>` tagged `**speaker best-guess (low confidence)**` (rule in wiki-ingest `references/ingest-rules.md`)
 -->
 
 # Distilled

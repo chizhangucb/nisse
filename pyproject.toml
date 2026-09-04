@@ -1,9 +1,12 @@
 # Ruff config only. nisse ships no Python package; this file exists so CI and
 # local runs lint the same way. Scope is the code under scripts/.
 [tool.ruff]
-line-length = 88
+# 100, not the usual 88: the wiki's own evidence-bullet format
+#   - YYYY-MM-DD | claim | #tag | Source: [[source_page]] (class)
+# runs 90-100 characters, and the checker's tests carry those bullets verbatim
+# as fixture data. Wrapping them would change what is under test.
+line-length = 100
 target-version = "py39"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
-

@@ -5,7 +5,7 @@ description: Distill ingested sources into wiki knowledge - mine undistilled sou
 
 Batch-native extraction pass: **queue → read → draft → checkpoint → write → report**; one checkpoint covers the whole batch, nothing is written before the owner's yes.
 
-Read `wiki/CLAUDE.md`, `wiki/rules.md`, and `references/distill-rules.md` first, in full. Precedence: schema > shared rules > skill rules > this file.
+Read `wiki/AGENTS.md` and `references/distill-rules.md` first, in full. Precedence: schema > skill rules > this file.
 
 ## Is / is not
 
@@ -20,6 +20,6 @@ Read `wiki/CLAUDE.md`, `wiki/rules.md`, and `references/distill-rules.md` first,
 
 1. **Build the queue:** scan `wiki/sources/` for empty `distilled:`. The owner names sources, or "pending" means all; a single source is a batch of one. Confirm scope if ambiguous.
 2. **Read each source fully.** `# Signals` is the primary input; go back to the raw file when signals are thin or ambiguous.
-3. **Draft, then checkpoint with the owner:** one package for the whole batch (contents table in `references/distill-rules.md`), cross-source dedup, proper nouns per `wiki/rules.md`.
+3. **Draft, then checkpoint with the owner:** one package for the whole batch (contents table in `references/distill-rules.md`), cross-source dedup, proper nouns per `wiki/AGENTS.md`.
 4. **Write, after the yes:** insert Evidence bullets in date order on each affected page, create the approved new pages (with inbound links), fill each source's `# Distilled` section, stamp `distilled:` to today, mint approved tags into the registry, append the pass as one row to `wiki/metadata/log.jsonl`. Append only: one JSON object per line, never rewrite an existing line.
 5. **Report the diff:** sources distilled, pages created/updated, contradictions opened, anything routed to `confidential/` (named to the owner only).

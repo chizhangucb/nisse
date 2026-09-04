@@ -1,6 +1,6 @@
 # Ingest rules
 
-Process rules specific to wiki-ingest. Shared rules live in `wiki/rules.md`; invariants and precedence in `wiki/CLAUDE.md`.
+Process rules specific to wiki-ingest. Invariants, shared boilerplate, and precedence live in `wiki/AGENTS.md`.
 
 ## Raw files and source pages
 
