@@ -26,7 +26,7 @@ sources/        one page per raw item: digest + takeaways + signals
 entities/       people, companies, products (proper nouns)
 concepts/       ideas, mechanisms, frameworks (common nouns)
 synthesis/      cross-source arguments, comparisons, open questions
-confidential/   your most sensitive knowledge pages (categories: governance/confidentiality.md)
+confidential/   your most sensitive knowledge pages (categories: docs/confidentiality.md)
 annex/          rotated evidence overflow from living pages, mirror-pathed
 metadata/       index.md, log.jsonl, sources.jsonl, tag_registry.md, name_registry.md
   index/        monthly source-index shards (sources-YYYY-MM.md), the human-readable companion to sources.jsonl
@@ -61,12 +61,12 @@ Before writing anything, state what was retrieved: full, partial, or excerpts; t
 Ingest/distill appends `# Evidence` only, never touches `# Current truth`. Triage is the only operation that refreshes `# Current truth`, only with the owner's approval in-session. Hard boundary both directions: triage never appends evidence.
 
 **Rule 7 - Sensitivity routes at write time, fail closed.**
-- Define your sensitive lenses in `governance/confidentiality.md` and mirror them as `confidential:` frontmatter values. Evidence matching a lens goes to `confidential/` pages, never open ones.
+- Define your sensitive lenses in `docs/confidentiality.md` and mirror them as `confidential:` frontmatter values. Evidence matching a lens goes to `confidential/` pages, never open ones.
 - To open pages: everything else.
 - **Per bullet, not per source**: a `confidential:`-marked source still feeds open pages with its non-sensitive evidence. The mark means "distill with Rule 7 glasses on".
 - **Could go either way → `confidential/`.**
 - **Source pages stay in `sources/` even when marked.** `confidential/` holds curated knowledge pages, never meeting digests; the mark, not the folder, routes sensitive evidence at distill.
-- Confidential pages may link out; nothing links in with content. Nothing in `confidential/` ever feeds external output (`governance/confidentiality.md` governs).
+- Confidential pages may link out; nothing links in with content. Nothing in `confidential/` ever feeds external output (`docs/confidentiality.md` governs).
 
 ## Three tiers of truth
 
@@ -100,7 +100,7 @@ project: <your-axis-values> # which hat you wore when the source arrived; define
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
 sources: [source_slug]      # omit on source pages
-confidential: [slug, slug]  # empty, or your lenses from governance/confidentiality.md
+confidential: [slug, slug]  # empty, or your lenses from docs/confidentiality.md
 ---
 ```
 
@@ -123,5 +123,5 @@ confidential: [slug, slug]  # empty, or your lenses from governance/confidential
 ## Hygiene
 
 - One-off scripts, logs, scratch files go ONLY under repo-root `.tmp/` (gitignored), never into `wiki/` or other content folders.
-- Style per `governance/communication-style.md`. Wiki pages are terse and factual, not essayistic.
-- File-class word budgets, checked by the hygiene script: living wiki pages 2,000; this schema 2,000; `wiki/rules.md` 400; any SKILL.md 500. Sediment homes: stories to the decisions log (`records/decisions.jsonl`), ops detail to skill references, item facts to the item's page.
+- Style per `docs/voice.md`. Wiki pages are terse and factual, not essayistic.
+- File-class word budgets: living wiki pages 2,000; this schema 2,000; `wiki/rules.md` 400; any SKILL.md 500. Sediment homes: ops detail to skill references, item facts to the item's page.

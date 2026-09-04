@@ -11,6 +11,7 @@ flaky. A retired folder trips this only if something commits it again.
 Later tickets extend this file with the wiki folder set (#27) and the guards
 (#29).
 """
+import functools
 import os
 import subprocess
 import unittest
@@ -25,7 +26,10 @@ EXPECTED_ROOT = {
     "AGENTS.md", "CLAUDE.md", "CONTEXT.md", "README.md", "LICENSE",
     # content
     "docs", "context", "wiki", "projects", "contacts", "skills", "scripts",
-    # infra
+    # infra. The ADR-0001 root list stops at pyproject.toml; these two are
+    # tooling that predates it and still has a caller, so they stay tracked:
+    # .coderabbit.yaml configures PR review, .env.example documents the one
+    # key wiki_retranscribe.py reads. Delete either and drop it from this set.
     ".claude", ".github", ".gitignore", "pyproject.toml",
     ".coderabbit.yaml", ".env.example",
 }
@@ -33,7 +37,7 @@ EXPECTED_ROOT = {
 # Folders and files ADR-0001 retired. None may be tracked at the root again.
 RETIRED_ROOT = {
     "governance", "records", "plans", "references", "archives", "graphs",
-    "spec", "specs", "operations", "operations.md", "graphify-out",
+    "spec", "operations.md",
     # a second root instructions file is retired: AGENTS.md is the one map
     "GEMINI.md", "AIOS.md",
 }
@@ -47,6 +51,10 @@ RETIRED_SCRIPTS = {
     "scripts/daily_digest.py",
 }
 
+# Paths the retired folders left behind in .gitignore. An ignore rule for a
+# folder nobody can commit is a pointer to machinery that no longer exists.
+RETIRED_IGNORE_FRAGMENTS = ("governance/", "records/", "graphs/", "plans/")
+
 # context/ is exactly five short templates, nothing else.
 EXPECTED_CONTEXT = {
     "about-me.md", "about-business.md", "about-team.md",
@@ -54,12 +62,14 @@ EXPECTED_CONTEXT = {
 }
 
 
+@functools.lru_cache(maxsize=1)
 def tracked_paths():
+    """git-tracked paths, read once per test session (one subprocess)."""
     out = subprocess.run(
         ["git", "-C", str(REPO), "ls-files"],
         capture_output=True, text=True, check=True,
     ).stdout
-    return [line for line in out.splitlines() if line]
+    return tuple(line for line in out.splitlines() if line)
 
 
 def tracked_toplevel():
@@ -143,6 +153,13 @@ class TestPointers(unittest.TestCase):
                 self.assertTrue(path.is_symlink(), f"{rel} is not a symlink")
                 self.assertEqual(os.readlink(path), "AGENTS.md")
                 self.assertIn(rel, tracked)
+
+    def test_gitignore_names_no_retired_path(self):
+        text = (REPO / ".gitignore").read_text(encoding="utf-8")
+        offenders = [f for f in RETIRED_IGNORE_FRAGMENTS if f in text]
+        self.assertFalse(
+            offenders,
+            f".gitignore still names retired paths: {sorted(offenders)}")
 
 
 if __name__ == "__main__":
