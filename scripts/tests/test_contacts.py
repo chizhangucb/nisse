@@ -164,6 +164,113 @@ class TestAdd(Sandbox):
         self.assertEqual(store["new_person"]["status"], "confirmed")
         self.assertEqual(C.cmd_add(args), 1)
 
+    def test_add_refuses_a_slug_the_store_cannot_hold(self):
+        # slugify() returns "" for a pure-Han name, so this is the documented
+        # path, not a typo: a blank slug would be written and never seen again.
+        args = C.build_parser().parse_args(
+            ["--root", self.root, "add", "--slug", C.slugify("戴宇森"),
+             "--name", "戴宇森"])
+        self.assertEqual(C.cmd_add(args), 1)
+        self.assertEqual(sorted(C.load_contacts(self.root)),
+                         ["priya_patel", "sam_rivera"])
+
+
+class TestDamagedRowsAreNeverSilentlyDropped(Sandbox):
+    """Every writer rewrites the whole file, so a row the reader drops would be
+    deleted from disk. Damage is a violation, and it blocks writes."""
+
+    def test_unparseable_line_is_a_violation(self):
+        with open(os.path.join(self.root, "contacts", C.CONTACTS_FILE), "a",
+                  encoding="utf-8") as f:
+            f.write("{not json\n")
+        violations, _ = C.validate(self.root)
+        self.assertTrue(any("not valid JSON" in v for v in violations))
+
+    def test_slugless_row_is_a_violation(self):
+        self.add_raw({"name": "No Slug", "status": "confirmed"})
+        violations, _ = C.validate(self.root)
+        self.assertTrue(any("has no slug" in v for v in violations))
+
+    def test_duplicate_slug_is_a_violation(self):
+        self.add_raw({"slug": "sam_rivera", "name": "Sam Rivera Again",
+                      "status": "confirmed", "affiliation": "", "role": "",
+                      "aliases": [], "channels": {}, "links": {}, "wiki": "",
+                      "source": "", "notes": ""})
+        violations, _ = C.validate(self.root)
+        self.assertTrue(any("duplicate slug" in v for v in violations))
+
+    def test_a_write_refuses_while_damage_stands(self):
+        self.add_raw({"name": "No Slug", "status": "confirmed"})
+        with self.assertRaises(C.ContactError):
+            C.set_channel("sam_rivera", "email", "sam@example.com", self.root)
+        # and the damaged row is still on disk, not silently rewritten away
+        with open(os.path.join(self.root, "contacts", C.CONTACTS_FILE),
+                  encoding="utf-8") as f:
+            self.assertIn("No Slug", f.read())
+
+    def test_a_null_field_is_absent_not_the_string_none(self):
+        self.add_raw({"slug": "n1", "name": None, "status": "confirmed",
+                      "affiliation": None, "role": None, "aliases": [],
+                      "channels": {}, "links": {}, "wiki": None,
+                      "source": None, "notes": None})
+        store = C.load_contacts(self.root)
+        self.assertEqual(store["n1"]["name"], "")
+        self.assertEqual(store["n1"]["wiki"], "")
+        self.assertEqual(C.resolve("None", self.root)["status"], "miss")
+        # a null name is an empty name, which validate already calls a violation
+        violations, _ = C.validate(self.root)
+        self.assertTrue(any("empty name" in v for v in violations))
+        self.assertFalse(any("wiki/None" in v for v in violations))
+
+    def test_an_empty_name_is_a_violation(self):
+        self.add_raw({"slug": "n2", "name": "", "status": "confirmed",
+                      "affiliation": "", "role": "", "aliases": [],
+                      "channels": {}, "links": {}, "wiki": "", "source": "",
+                      "notes": ""})
+        violations, _ = C.validate(self.root)
+        self.assertTrue(any("empty name" in v for v in violations))
+
+
+class TestNamesakes(Sandbox):
+    def test_two_contacts_with_the_same_name_warn(self):
+        self.add_contact("daniel_chen", "Daniel Chen")
+        self.add_contact("daniel_chen_acme", "Daniel Chen")
+        violations, warnings = C.validate(self.root)
+        self.assertEqual(violations, [])
+        self.assertTrue(any("is claimed by" in w for w in warnings))
+
+
+class TestAddAlias(Sandbox):
+
+    def test_alias_lands_and_then_resolves(self):
+        C.add_alias("sam_rivera", "Sam Riviera", self.root)
+        self.assertEqual(C.resolve("sam riviera", self.root)["contact"]["slug"],
+                         "sam_rivera")
+
+    def test_duplicate_alias_and_unknown_contact_are_refused(self):
+        C.add_alias("sam_rivera", "Sam Riviera", self.root)
+        with self.assertRaises(C.ContactError):
+            C.add_alias("sam_rivera", "SAM RIVIERA", self.root)
+        with self.assertRaises(C.ContactError):
+            C.add_alias("nobody", "Whoever", self.root)
+
+
+class TestAddNotName(Sandbox):
+
+    def test_entry_lands_and_then_blocks_resolution(self):
+        C.add_not_name('"term share" -> term sheet', self.root)
+        res = C.resolve("term share", self.root)
+        self.assertEqual(res["status"], "not_name")
+
+    def test_an_entry_without_a_meaning_is_refused(self):
+        with self.assertRaises(C.ContactError):
+            C.add_not_name("just some words", self.root)
+
+    def test_a_duplicate_entry_is_refused(self):
+        C.add_not_name('"term share" -> term sheet', self.root)
+        with self.assertRaises(C.ContactError):
+            C.add_not_name('"term share" -> term sheet', self.root)
+
 
 class TestAliasInflationGuard(Sandbox):
     """A one-word alias that is another person's real name earns a warning."""

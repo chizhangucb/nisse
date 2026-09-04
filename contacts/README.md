@@ -11,7 +11,9 @@ Both files ship with FAKE example rows. Delete them with the rest of the example
 python3 scripts/contacts.py resolve "Sam Reveara"   # who is this?
 python3 scripts/contacts.py query riv               # loose search
 python3 scripts/contacts.py add --slug ada_lovelace --name "Ada Lovelace"
+python3 scripts/contacts.py add-alias --slug ada_lovelace --alias "Ada Loveless"
+python3 scripts/contacts.py add-not-name --line '"term share" -> term sheet'
 python3 scripts/contacts.py validate                # exits 1 on violations
 ```
 
-`validate` also warns about aliases that are risky rather than wrong: a one-word alias that is another contact's real name, or one the anti-registry already excludes. Keep those mappings page-scoped instead of flat aliases.
+`validate` names every row the store cannot hold: an unreadable line, a row with no slug, a duplicate slug. Those are violations rather than warnings because every write rewrites `contacts.jsonl` whole, so the script refuses to write at all until they are fixed by hand. It also warns about aliases that are risky rather than wrong: a one-word alias that is another contact's real name, one the anti-registry already excludes, or two people sharing a canonical name. Keep risky mappings page-scoped instead of flat aliases.
