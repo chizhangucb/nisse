@@ -3,6 +3,7 @@
 Deterministic mechanics. Skills route judgment; scripts do mechanics. If a step needs no model, it belongs here as plain code.
 
 - Tests live in `scripts/tests/`.
+- Git guards live in `scripts/guards/`, with their own README.
 - A script survives only while something calls it. Nothing here runs behind a session.
 
 What ships:
@@ -15,5 +16,7 @@ What ships:
 - `contacts.py`: the local contact store under `contacts/` (two JSONL files). `resolve <name>` is proper-noun resolution for people; `validate` is the schema and alias guard. The only sanctioned writer for those files.
 - `transcript_quality_score.py`: deterministic garble detector for meeting captures (no model, no cost); checks ingest and verifies re-transcriptions.
 - `wiki_retranscribe.py`: AssemblyAI re-transcription engine (local audio in, verbatim `_asr.md` mirror out, verify-or-abort, cost cap), driven by `/wiki-retranscribe`. Needs `ASSEMBLYAI_API_KEY`.
+
+`scripts/guards/` holds the two git guards: the pre-push secret and `CONFIDENTIAL` scan with its installer, and the destructive-git PreToolUse hook. See `scripts/guards/README.md` for what each blocks and how to install them.
 
 Each script states what it reads and writes at the top of the file.

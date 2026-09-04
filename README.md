@@ -25,6 +25,13 @@ git clone https://github.com/chizhangucb/nisse && cd nisse
 claude   # or your harness of choice
 ```
 
+Install the git guards once per clone, so nothing confidential can be pushed:
+
+```bash
+brew install gitleaks                        # the push guard needs it
+python3 scripts/guards/install_push_guard.py # pre-push secret + CONFIDENTIAL scan
+```
+
 Then fill in `context/` (five short files: who you are, your work, your people, your priorities, your goals) and ingest your first source.
 
 **On Windows:** enable symlinks in git before cloning (`git config --global core.symlinks true`), or `CLAUDE.md` lands as a text file and your assistant reads nothing.
@@ -43,7 +50,7 @@ Not an app. Markdown, folders, and small scripts an agentic coding harness turns
 | `projects/` | one folder per workstream |
 | `contacts/` | the local contact store |
 | `skills/` | the judgment procedures, starting with the wiki loop |
-| `scripts/` | the deterministic mechanics behind them |
+| `scripts/` | the deterministic mechanics behind them, and the git guards in `scripts/guards/` |
 
 ## Process skills
 

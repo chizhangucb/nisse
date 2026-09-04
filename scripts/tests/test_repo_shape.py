@@ -8,7 +8,7 @@ The test reads git-tracked paths only (`git ls-files`), so generated and
 gitignored artifacts (`.tmp/`, `.pytest_cache/`, `.DS_Store`) never make it
 flaky. A retired folder trips this only if something commits it again.
 
-#29 extends this file with the guards.
+The guards folder (#29) is part of the shape it asserts.
 """
 import functools
 import os
@@ -48,6 +48,17 @@ RETIRED_SCRIPTS = {
     "scripts/ticket_tracker.py",
     "scripts/daily_maintenance.py",
     "scripts/daily_digest.py",
+}
+
+# The guards folder: exactly these four files, each of the two hooks carrying
+# the marker its installer/wiring matches on, and both hooks executable.
+EXPECTED_GUARDS = {
+    "README.md", "pre-push-secret-scan",
+    "install_push_guard.py", "block-dangerous-git.sh",
+}
+GUARD_MARKERS = {
+    "pre-push-secret-scan": "managed-by: nisse-push-guard",
+    "block-dangerous-git.sh": "managed-by: nisse-git-guard",
 }
 
 # Paths the retired folders left behind in .gitignore. An ignore rule for a
@@ -163,6 +174,23 @@ class TestContactsShape(unittest.TestCase):
                      if p in RETIRED_CONTACTS or p.endswith((".yml", ".yaml"))]
         self.assertFalse(
             offenders, f"a YAML contact store is tracked again: {sorted(offenders)}")
+
+
+class TestGuardsShape(unittest.TestCase):
+    def test_guards_folder_is_exactly_the_four_files(self):
+        actual = tracked_under("scripts/guards")
+        self.assertEqual(
+            actual, EXPECTED_GUARDS,
+            f"scripts/guards is not the guard set: {sorted(actual)}")
+
+    def test_each_hook_is_executable_and_marked(self):
+        # The installer only ever overwrites or removes a hook carrying its
+        # marker, and git must ship the hooks with the executable bit.
+        for name, marker in GUARD_MARKERS.items():
+            with self.subTest(hook=name):
+                path = REPO / "scripts" / "guards" / name
+                self.assertTrue(os.access(path, os.X_OK), f"{name} is not executable")
+                self.assertIn(marker, path.read_text(encoding="utf-8"))
 
 
 class TestContextShape(unittest.TestCase):

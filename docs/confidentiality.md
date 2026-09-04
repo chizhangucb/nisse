@@ -18,7 +18,7 @@ A folder whose contents are confidential holds a file named `CONFIDENTIAL`. Sens
 
 ## The guard
 
-The pre-push secret scan on any repo with a public remote fails the push when a `CONFIDENTIAL` marker or a secret is in the diff. Keep your own instance of this kit on a private remote, so confidential trees back up there by design and the guard stops them from reaching anywhere public.
+The pre-push secret scan (`scripts/guards/pre-push-secret-scan`, installed by `scripts/guards/install_push_guard.py`) on any repo with a public remote fails the push when a `CONFIDENTIAL` marker or a secret is in the pushed range. Keep your own instance of this kit on a private remote, so confidential trees back up there by design and the guard stops them from reaching anywhere public.
 
 ## When unsure
 
