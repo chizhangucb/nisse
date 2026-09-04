@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Workspace health checker for the /hygiene skill.
+"""Workspace health checker: the deterministic hygiene sweep.
 
 Deterministic, read-only. Walks the repo and emits findings grouped into 6
 categories: filesystem cruft, git hygiene, freshness, operating-doc health,
@@ -808,8 +808,8 @@ EXCLUDED_FLOOR_POINTERS = {
     "design-rubric.md": "on-demand UI rubric, loaded before building or "
                         "reshaping any interface",
     "lessons.md": "on-demand cross-project lessons catch-all, not an obligation",
-    "memory-promotion.md": "on-demand: the promotion pipeline (/promote) loads "
-                           "it when it runs; its confidentiality floor is owned "
+    "memory-promotion.md": "on-demand: the promotion pipeline loads it when it "
+                           "runs; its confidentiality floor is owned "
                            "by confidentiality.md (a floor doc)",
 }
 

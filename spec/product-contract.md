@@ -9,10 +9,10 @@ nisse is a starter kit for a personal AI operating system: a plain-files git rep
 The interfaces a user or agent consumes. One line each.
 - `python3 scripts/setup.py`: idempotent first run: toolchain check, floor-symlink repair, name personalization, `.env` scaffold. Never touches your content.
 - The floor: `AIOS.md` (root map; `CLAUDE.md`/`AGENTS.md`/`GEMINI.md` symlink it) plus `governance/*`, the rules an agent loads every session.
-- Wiki loop skills: `/wiki-ingest`, `/wiki-distill`, `/wiki-triage` (plus `/grill-me`, `/handoff`); host-agent only, zero keys.
-- Hooks + hygiene: session-ledger and session-close hooks keep `records/` written; `scripts/hygiene_check.py` (`/hygiene`) checks structure and freshness.
+- Wiki loop skills: `/wiki-ingest`, `/wiki-distill`, `/wiki-triage`; host-agent only, zero keys.
+- Hooks + hygiene: session-ledger and session-close hooks keep `records/` written; `scripts/hygiene_check.py` checks structure and freshness.
 - Connectors (tier 2, bring your own keys): Fireflies, Plaud, AssemblyAI (`/wiki-retranscribe`), Linear; enumerated in `.env.example` and the `operations.md` Connectors table.
-- Dormant seams (tier 3): egress gate, model routing, graphs, spoke pattern, memory promotion (`/promote`); each README is its own wiring guide.
+- Dormant seams (tier 3): egress gate, model routing, graphs, spoke pattern, memory promotion; each README is its own wiring guide.
 - Installable-job example: `scripts/daily_maintenance.py` (dormant; template in `scripts/templates/`), copied and scheduled by the user, never pre-installed.
 
 ## Owned data
