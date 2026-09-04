@@ -4,10 +4,10 @@
 Idempotent; run it again any time. Does four things, tells you what it did:
 
 1. Toolchain check: python3 version, git, and (warn-only) the `claude` CLI.
-2. Floor integrity: CLAUDE.md / AGENTS.md / GEMINI.md must be symlinks to
-   AIOS.md (a Windows clone without symlinks gets real copies instead).
-3. Personalization: asks your name (skippable) and writes it into the AIOS.md
-   opening line, so every session starts addressed to you.
+2. Map integrity: CLAUDE.md must be a symlink to AGENTS.md (a Windows clone
+   without symlinks gets a real copy instead).
+3. Personalization: asks your name (skippable) and writes it into the
+   AGENTS.md opening line, so every session starts addressed to you.
 4. `.env` from `.env.example` if absent (connector keys, all optional).
 
 It never touches governance/, context/ content, or the wiki: those are yours
@@ -18,8 +18,8 @@ import shutil
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FLOOR = "AIOS.md"
-SYMLINKS = ("CLAUDE.md", "AGENTS.md", "GEMINI.md")
+FLOOR = "AGENTS.md"
+SYMLINKS = ("CLAUDE.md",)
 PLACEHOLDER = "the owner's personal AIOS"
 
 
@@ -102,12 +102,12 @@ def personalize():
     except EOFError:
         name = ""
     if not name:
-        ok("skipped; edit AIOS.md yourself when ready")
+        ok(f"skipped; edit {FLOOR} yourself when ready")
         return
     text = text.replace(PLACEHOLDER, f"{name}'s personal AIOS", 1)
     with open(floor_path, "w", encoding="utf-8") as f:
         f.write(text)
-    ok(f"AIOS.md now opens addressed to {name}")
+    ok(f"{FLOOR} now opens addressed to {name}")
 
 
 def ensure_env():
