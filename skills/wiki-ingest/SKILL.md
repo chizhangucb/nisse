@@ -27,10 +27,10 @@ Authorship decides the folder, never the capture tool or subject.
 
 ## The pass
 
-1. **Check the index:** `wiki/metadata/index.md` for non-meetings, grep `wiki/metadata/index/` for meetings. Already ingested → stop and say so.
+1. **Check the index:** `wiki/metadata/index.md` for non-meetings, grep `wiki/metadata/sources.jsonl` by slug for meetings. Already ingested → stop and say so.
 2. **Acquire and read fully; declare retrieval** (full / partial / excerpts) before writing anything. A workaround is never a clean read (Rule 5).
 3. **Judge the tier** (meetings only; policy in `references/ingest-rules.md`). Ledger tier: still land the raw file and one annotated monthly-index line, but skip the source page. The owner saying "full page" overrides.
 4. **Land the raw file** verbatim, per the naming rules in `references/ingest-rules.md`. Never edit what you mirror.
 5. **Write the source page** from the template (`wiki/_templates/source-page-meeting.md` or `-general.md`); the templates' inline comments carry the per-section rules. Set `project:`, `participants`, `context`, `meeting_type`; set `confidential:` NOW, fail closed, and say the call in the report. Flag name gaps per `references/ingest-rules.md`. Extract `# Signals` generously. Leave `distilled:` empty.
-6. **Update metadata:** monthly index line (meetings) or `index.md` (non-meetings); append one row to `wiki/metadata/log.jsonl` and, for a new source, one row to `wiki/metadata/sources.jsonl`. Append only: one JSON object per line, never rewrite an existing line.
+6. **Update metadata:** the source row (meetings, `wiki/metadata/sources.jsonl`) or `wiki/metadata/index.md` (non-meetings), plus one `wiki/metadata/log.jsonl` row. Both jsonl files are append-only and written only via `python3 scripts/wiki_ledger.py`.
 7. **Report** per rules.md batch semantics; close with the undistilled queue count.

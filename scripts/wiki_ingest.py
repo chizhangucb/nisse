@@ -13,7 +13,7 @@ scaffold path, which is the same pipeline.
 
 The pipeline does only what is mechanical: dedupe, the already-ingested guard,
 the garble gate, the raw mirror (clobber-guarded), a source-page scaffold, the
-monthly index line, the log line. Everything that needs judgment (Rule 7
+sources row, the log row. Everything that needs judgment (Rule 7
 confidential routing, signal extraction, an unclear series slug) is emitted as
 a NEEDS-JUDGMENT line for the wiki-ingest skill to resolve. This script never
 guesses those.
@@ -40,9 +40,6 @@ REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 RAW_DIR = os.path.join(REPO, "wiki", "raw", "transcripts")
 SOURCES_DIR = os.path.join(REPO, "wiki", "sources")
 META_DIR = os.path.join(REPO, "wiki", "metadata")
-INDEX_FILE = os.path.join(META_DIR, "index.md")
-INDEX_SHARD_DIR = os.path.join(META_DIR, "index")
-LOG_FILE = os.path.join(META_DIR, "log.md")
 TEMPLATE = os.path.join(REPO, "wiki", "_templates", "source-page-meeting.md")
 
 GQL_URL = "https://api.fireflies.ai/graphql"
@@ -675,14 +672,6 @@ def _insert_recovered_block(scaffold, today, verdict):
 # --------------------------------------------------------------------------- #
 # Index and log appends
 # --------------------------------------------------------------------------- #
-
-SHARD_HEADER = ("# Sources: {month}\n\n"
-                "Meeting sources for the month, one line per meeting, newest first.\n\n")
-
-
-def shard_path(date, shard_dir=INDEX_SHARD_DIR):
-    return os.path.join(shard_dir, f"sources-{date[:7]}.md")
-
 
 def index_line(meeting, slug):
     return (f"- [[{slug}]] | meeting {meeting.date}, {meeting.title} | work | verbatim "

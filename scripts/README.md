@@ -12,6 +12,7 @@ What ships:
 - `wiki_ingest.py`: mechanical half of ingest. Acquires meetings, mirrors them to `raw/`, scaffolds the source page, writes the index and log lines. Judgment calls come back as NEEDS-JUDGMENT lines for the skill.
 - `wiki_distill_apply.py`: applies a distill plan's evidence bullets to their pages and stamps `distilled:`.
 - `evidence_archive.py`: rotates folded evidence off a living page into `wiki/archive/<same-subpath>.md`, leaving a dated pointer. Triage calls it; distill never does.
+- `contacts.py`: the local contact store under `contacts/` (two JSONL files). `resolve <name>` is proper-noun resolution for people; `validate` is the schema and alias guard. The only sanctioned writer for those files.
 - `transcript_quality_score.py`: deterministic garble detector for meeting captures (no model, no cost); checks ingest and verifies re-transcriptions.
 - `wiki_retranscribe.py`: AssemblyAI re-transcription engine (local audio in, verbatim `_asr.md` mirror out, verify-or-abort, cost cap), driven by `/wiki-retranscribe`. Needs `ASSEMBLYAI_API_KEY`.
 
