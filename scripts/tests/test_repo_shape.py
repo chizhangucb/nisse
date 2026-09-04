@@ -74,6 +74,12 @@ EXPECTED_TEMPLATES = {
     "source-page-general.md", "source-page-meeting.md",
 }
 
+# contacts/ is the JSONL store and its readme (#28). The YAML anti-registry and
+# the per-person YAML files it replaced may not come back: two stores means two
+# answers to who a name is.
+EXPECTED_CONTACTS = {"README.md", "contacts.jsonl", "not_names.jsonl"}
+RETIRED_CONTACTS = {"_not_names.yml", "not_names.yml"}
+
 # context/ is exactly five short templates, nothing else.
 EXPECTED_CONTEXT = {
     "about-me.md", "about-business.md", "about-team.md",
@@ -140,6 +146,23 @@ class TestRepoShape(unittest.TestCase):
         strays = {"GEMINI.md", "AIOS.md"} & tracked_toplevel()
         self.assertFalse(
             strays, f"a second root instructions file is back: {sorted(strays)}")
+
+
+class TestContactsShape(unittest.TestCase):
+    def test_contacts_is_the_jsonl_store_and_nothing_else(self):
+        actual = tracked_under("contacts")
+        extra = actual - EXPECTED_CONTACTS
+        missing = EXPECTED_CONTACTS - actual
+        self.assertFalse(
+            extra, f"unexpected paths under contacts/: {sorted(extra)}")
+        self.assertFalse(
+            missing, f"contact-store files missing: {sorted(missing)}")
+
+    def test_no_yaml_contact_store_reappears(self):
+        offenders = [p for p in tracked_under("contacts")
+                     if p in RETIRED_CONTACTS or p.endswith((".yml", ".yaml"))]
+        self.assertFalse(
+            offenders, f"a YAML contact store is tracked again: {sorted(offenders)}")
 
 
 class TestContextShape(unittest.TestCase):

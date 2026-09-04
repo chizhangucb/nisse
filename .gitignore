@@ -14,6 +14,10 @@ node_modules/
 # transient wiki-ledger write files
 wiki/metadata/*.jsonl.tmp
 
+# transient contact-store write files and its lock
+contacts/*.jsonl.tmp
+contacts/.contacts.lock
+
 # scratch and one-off files
 .tmp/
 

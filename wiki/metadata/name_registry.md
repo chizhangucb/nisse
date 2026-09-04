@@ -1,7 +1,9 @@
 # Name Registry
 
-Canonical spellings for proper nouns that transcription mangles. One row per resolved name: how it was misheard, who or what it actually is, and the source that settled it. Checked first in proper-noun resolution (`wiki/AGENTS.md`); the anti-registry (things that look like names and are not) is `contacts/_not_names.yml`.
+Canonical spellings for proper nouns that transcription mangles: companies, products, places. One row per resolved name: how it was misheard, what it actually is, and the source that settled it.
+
+People are not here. A person's mishearings live as `aliases` on their row in `contacts/contacts.jsonl`, and the anti-registry (things that look like names and are not) is `contacts/not_names.jsonl`; both are read with `python3 scripts/contacts.py resolve <name>`. Proper-noun resolution order is in `wiki/AGENTS.md`.
 
 | As heard | Canonical | Settled by |
 |---|---|---|
-| (example) "Sam Reveara" | Sam Rivera | 2026-01-05 weekly sync, self-introduction |
+| (example) "Acne Dev Tools" | Acme DevTools | 2026-01-05 weekly sync, slide title |
