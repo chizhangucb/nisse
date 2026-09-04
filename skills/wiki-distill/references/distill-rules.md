@@ -1,6 +1,6 @@
 # Distill rules
 
-Process rules specific to wiki-distill. Shared rules live in `wiki/rules.md`; invariants and precedence in `wiki/CLAUDE.md`.
+Process rules specific to wiki-distill. Invariants, shared boilerplate, and precedence live in `wiki/AGENTS.md`.
 
 - **Checkpoint package.** One package covering the whole batch, shown before any write:
 

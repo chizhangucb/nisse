@@ -1,6 +1,6 @@
 # Triage rules
 
-Process rules specific to wiki-triage. Shared rules live in `wiki/rules.md`; invariants and precedence in `wiki/CLAUDE.md`.
+Process rules specific to wiki-triage. Invariants, shared boilerplate, and precedence live in `wiki/AGENTS.md`.
 
 Mechanical checks are the countable ones: orphans, page budgets, truth staleness, undistilled backlog, tag sprawl, ingest gaps. Sweep them first, then triage owns the judgment half below.
 
@@ -12,10 +12,10 @@ Mechanical checks are the countable ones: orphans, page budgets, truth staleness
   | Promote | wiki-worthy now; hand to wiki-distill | today |
   | Keep | still maturing, stays queued (defers the decision) | empty |
   | Skip | reviewed, no wiki value, permanently | today + skip note |
-  | Retire | move to `wiki/annex/`; per-item explicit yes, never a bulk yes | today |
+  | Retire | move to `wiki/archive/`; per-item explicit yes, never a bulk yes | today |
 
   `triaged:` is set only when a decision was made.
-- **Evidence archival.** Living page over ~2,000 words: roll the oldest largely-folded Evidence (older than ~1 month, not inside an open block) to `wiki/annex/<same-subpath>.md` (`type: annex`, dates and cites kept), leaving a `> [!note]` pointer atop the live `# Evidence`, until under budget or nothing eligible remains. Nothing eligible: flag it, not fixed. Propose at checkpoint; distill never archives.
+- **Evidence archival.** Living page over ~2,000 words: roll the oldest largely-folded Evidence (older than ~1 month, not inside an open block) to `wiki/archive/<same-subpath>.md` (`type: archive`, dates and cites kept), leaving a `> [!note]` pointer atop the live `# Evidence`, until under budget or nothing eligible remains. Nothing eligible: flag it, not fixed. Propose at checkpoint; distill never archives.
 - **Write discipline.** Only what the owner approved. Truth and Open-decisions rewrites dated today, `updated:` bumped; tag merges make the old slug an alias of the canonical, retag frontmatter, leave historical inline `#tags` untouched; `wiki/metadata/index.md` updated for created or retired pages; one `triage` recap row appended to `wiki/metadata/log.jsonl` (`op: triage`), append only. Never re-propose what the owner declined, absent new evidence.
 - **Health checks (judgment).** Ranked, leakage on top, each with a proposed fix or an honest "no action worth taking":
 

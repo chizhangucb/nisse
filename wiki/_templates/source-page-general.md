@@ -1,17 +1,18 @@
 ---
 type: source
 tags: []                # 3-5 canonical slugs from wiki/metadata/tag_registry.md
-project:                # your axis values, e.g. work | side_projects | health | life
+project:                # work | personal | health | life
 created:
 ingested:
 origin:                 # URL or raw/ file path
-via:                    # clipper | fetcher | paste
-retrieval:              # full | partial
+via:                    # clipper | fetcher | paste | drive_export | gmail
+retrieval:              # full | partial | excerpts
 storage:                # verbatim | digest
 class:                  # primary | external
-confidential:           # empty, or a list of your lenses from docs/confidentiality.md
+confidential:           # empty, or a list: [finance] | [personnel] | [legal] | [finance, personnel] ...
 distilled:              # empty = awaiting wiki-distill; set to date when distilled
 triaged:                # empty = still in the triage queue (brainstorms and clippings only)
+# recovered:            # only on retranscribed sources; a block with engine + date subkeys
 ---
 
 # Context
@@ -38,7 +39,7 @@ triaged:                # empty = still in the triage queue (brainstorms and cli
 # Signals
 Primary distill input. Extract generously, with attribution; subtle or ambiguous signals included.
 
-<!-- Format: - **[[target_page]]** | signal. Target is the page this most likely feeds;
+<!-- Format: - **[[target]]** | signal. Target is the page this most likely feeds;
      **target unclear** is allowed. A hint for wiki-distill, never a constraint. -->
 
 - (None)

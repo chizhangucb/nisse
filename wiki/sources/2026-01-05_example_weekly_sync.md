@@ -31,8 +31,19 @@ Weekly sync of the example Acme team. Priya reported the CI flake rate halved af
 
 # Signals
 
-- Priya may need a second pair of hands on the payments suite before the cut.
+- **[[acme_devtools]]** | Priya Patel (00:11-02:20): pinning the runner image halved the flake rate; what is left is concentrated in the payments suite.
+- **[[acme_devtools]]** | Priya Patel (02:20): wants a second pair of hands on the payments suite before the cut; cannot separate a real failure from a flake without three reruns.
+- **[[ci_flake_triage]]** | Priya Patel (02:20): rerun-three-times is the current triage method, which is a cost nobody has costed.
+- **[[acme_devtools]]** | Sam Rivera (04:37): 3-step onboarding tested better than 5-step; users want fewer fields, not more guidance.
+- **[[acme_devtools]]** | Jordan Doe (10:58): v1 cut committed for June 12, everyone plans backwards from it.
+
+# Transcript Link
+
+- paste: hand-typed example, no capture tool
+- Raw mirror: `wiki/raw/transcripts/2026-01-05_example_weekly_sync.md`
+- Excluded captures: (none)
 
 # Distilled
 
-- [[acme_devtools]] | evidence appended | CI flake fix, v1 cut date
+- [[acme_devtools]] | evidence appended | CI flake fix, onboarding variant, v1 cut date
+- [[ci_flake_triage]] | page created, evidence appended | rerun-based triage as the current method

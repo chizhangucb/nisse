@@ -1,0 +1,181 @@
+{
+  "listing": {
+    "transcripts": [
+      {
+        "id": "FF1",
+        "title": "Fixture Weekly Sync",
+        "dateString": "2026-07-30T17:00:00.000Z",
+        "duration": 31.0,
+        "transcript_url": "https://app.fireflies.ai/view/FF1",
+        "speakers": [
+          {
+            "name": "Ada Lovelace"
+          },
+          {
+            "name": "Bo Chen"
+          }
+        ],
+        "meeting_attendees": [
+          {
+            "displayName": "Ada Lovelace",
+            "email": "ada@example.com"
+          },
+          {
+            "displayName": "Bo Chen",
+            "email": "bo@example.com"
+          }
+        ],
+        "meeting_info": {
+          "fred_joined": true,
+          "silent_meeting": false
+        }
+      },
+      {
+        "id": "FF2",
+        "title": "Fixture Weekly Sync",
+        "dateString": "2026-07-30T17:00:00.000Z",
+        "duration": 31.0,
+        "transcript_url": "https://app.fireflies.ai/view/FF2",
+        "speakers": [
+          {
+            "name": "Ada Lovelace"
+          }
+        ],
+        "meeting_attendees": [
+          {
+            "displayName": "Ada Lovelace",
+            "email": "ada@example.com"
+          }
+        ],
+        "meeting_info": {
+          "fred_joined": false,
+          "silent_meeting": false
+        }
+      }
+    ]
+  },
+  "transcripts": {
+    "FF1": {
+      "id": "FF1",
+      "title": "Fixture Weekly Sync",
+      "dateString": "2026-07-30T17:00:00.000Z",
+      "duration": 31.0,
+      "transcript_url": "https://app.fireflies.ai/view/FF1",
+      "speakers": [
+        {
+          "name": "Ada Lovelace"
+        },
+        {
+          "name": "Bo Chen"
+        }
+      ],
+      "meeting_attendees": [
+        {
+          "displayName": "Ada Lovelace",
+          "email": "ada@example.com"
+        },
+        {
+          "displayName": "Bo Chen",
+          "email": "bo@example.com"
+        }
+      ],
+      "sentences": [
+        {
+          "speaker_name": "Ada Lovelace",
+          "start_time": 10,
+          "text": "Opening the sync. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter."
+        },
+        {
+          "speaker_name": "Ada Lovelace",
+          "start_time": 18,
+          "text": "Two sentences from the same speaker. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter."
+        },
+        {
+          "speaker_name": "Bo Chen",
+          "start_time": 300,
+          "text": "Agreed. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter."
+        },
+        {
+          "speaker_name": "Ada Lovelace",
+          "start_time": 700,
+          "text": "Second block. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter."
+        },
+        {
+          "speaker_name": "Bo Chen",
+          "start_time": 1200,
+          "text": "Third block. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter."
+        },
+        {
+          "speaker_name": "Ada Lovelace",
+          "start_time": 1500,
+          "text": "Fourth block. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter."
+        },
+        {
+          "speaker_name": "Bo Chen",
+          "start_time": 1790,
+          "text": "Closing. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter."
+        }
+      ]
+    },
+    "FF2": {
+      "id": "FF2",
+      "title": "Fixture Weekly Sync",
+      "dateString": "2026-07-30T17:00:00.000Z",
+      "duration": 31.0,
+      "transcript_url": "https://app.fireflies.ai/view/FF2",
+      "speakers": [
+        {
+          "name": "Ada Lovelace"
+        }
+      ],
+      "meeting_attendees": [
+        {
+          "displayName": "Ada Lovelace",
+          "email": "ada@example.com"
+        }
+      ],
+      "sentences": [
+        {
+          "speaker_name": "Ada Lovelace",
+          "start_time": 12,
+          "text": "Partial capture from the second account. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter."
+        },
+        {
+          "speaker_name": "Ada Lovelace",
+          "start_time": 1210,
+          "text": "Still inside the winner's coverage. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter."
+        }
+      ]
+    },
+    "FF3": {
+      "id": "FF3",
+      "title": "Fixture Weekly Sync",
+      "dateString": "2026-07-30T17:00:00.000Z",
+      "duration": 31.0,
+      "transcript_url": "https://app.fireflies.ai/view/FF3",
+      "speakers": [
+        {
+          "name": "Ada Lovelace"
+        }
+      ],
+      "meeting_attendees": [
+        {
+          "displayName": "Ada Lovelace",
+          "email": "ada@example.com"
+        }
+      ],
+      "sentences": [
+        {
+          "speaker_name": "Ada Lovelace",
+          "start_time": 12,
+          "text": "Overlapping start. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter."
+        },
+        {
+          "speaker_name": "Ada Lovelace",
+          "start_time": 2400,
+          "text": "Content the winner never captured. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter. We walked the partner integration end to end and agreed the identity handshake stays on our side while the settlement leg moves to them, which keeps the demo honest about who holds the trust root and lets the pilot ship without another schema negotiation this quarter."
+        }
+      ]
+    }
+  }
+}

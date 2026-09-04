@@ -1,9 +1,13 @@
 # Ruff config only. nisse ships no Python package; this file exists so CI and
 # local runs lint the same way. Scope is the code under scripts/.
 [tool.ruff]
-line-length = 88
+# 100, not 88. The wiki scripts were ported wholesale from the upstream repo,
+# which was written at ~100 columns and linted by nothing. Reflowing ~80 lines
+# by hand would have meant editing ported logic and the checker's fixture data
+# (evidence bullets, whose length is the format under test) purely to satisfy
+# a limit. The limit binds: nothing exceeds 100.
+line-length = 100
 target-version = "py39"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
-
