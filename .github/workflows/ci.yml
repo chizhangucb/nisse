@@ -27,6 +27,17 @@ jobs:
           python-version: '3.12'
       - name: Install pytest
         run: python -m pip install --upgrade pip pytest
+      - name: Install gitleaks
+        # The push-guard tests are integration tests over a throwaway repo; they
+        # skip themselves without a scanner on PATH, so CI installs the binary to
+        # keep them from silently passing as skips. Not the gitleaks action: that
+        # scans this repo, which is a different job from putting it on PATH.
+        run: |
+          version=8.28.0
+          curl -sSfL -o /tmp/gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${version}/gitleaks_${version}_linux_x64.tar.gz"
+          tar -xzf /tmp/gitleaks.tar.gz -C /usr/local/bin gitleaks
+          gitleaks version
       - name: Run tests
         run: python -m pytest scripts/tests/ -q
 

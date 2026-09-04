@@ -2,7 +2,7 @@
 # `vX.Y.Z` tag into a GitHub Release with auto-generated notes from the commits
 # and merged PRs since the previous tag.
 #
-# Cut a release:  git tag v0.1.0 && egress git push origin v0.1.0
+# Cut a release:  git tag v0.1.0 && git push origin v0.1.0
 name: Release
 
 on:
