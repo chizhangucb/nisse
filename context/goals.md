@@ -2,6 +2,8 @@
 
 > Fill-in template. The frozen quarterly yardstick: write it at quarter start, grade against it at quarter end, never edit mid-quarter (that's what makes it a yardstick). Mid-quarter reality lives in `priorities.md`.
 
+**Last updated:** (date). Refresh when reality moves; if this is more than a quarter stale, say so.
+
 ## Q_ 20__ (example)
 
 1. (example) Ship v1 to the 40 design partners. Grade: shipped / partial / slipped.

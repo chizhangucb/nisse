@@ -2,6 +2,8 @@
 
 > Fill-in template. Replace the example answers; keep the headings. Short beats complete: the assistant reads this every session, so every line should earn its load.
 
+**Last updated:** (date). Refresh when reality moves; if this is more than a quarter stale, say so.
+
 ## Who I am
 
 (example) Jordan Doe, solo founder of a small devtools company, based in Berlin, CET. Second-time founder; the first one taught me to ship before polishing.
