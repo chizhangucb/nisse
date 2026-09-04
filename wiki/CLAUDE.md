@@ -39,7 +39,7 @@ metadata/       index.md, log.jsonl, sources.jsonl, tag_registry.md, name_regist
 ## The Rules
 
 **Rule 1 - Never rewrite history, only append.**
-`raw/` read-only; the wiki log (`metadata/log.jsonl`, appended only via `python3 scripts/aios_ledger.py append-log ...`, a deny hook blocks raw edits) and `# Evidence` sections append-only. Pages get revised, but a contradicted claim is never silently overwritten: add a `> [!warning] Superseded` callout naming old claim, new claim, and source. Deleting any wiki page requires the owner's explicit confirmation.
+`raw/` read-only; the wiki log (`metadata/log.jsonl`, one JSON object per line, appended to and never rewritten) and `# Evidence` sections append-only. Pages get revised, but a contradicted claim is never silently overwritten: add a `> [!warning] Superseded` callout naming old claim, new claim, and source. Deleting any wiki page requires the owner's explicit confirmation.
 Living pages stay under ~2,000 words. Over budget, triage rolls the oldest folded Evidence (older than ~1 month, not inside an open block) to `annex/<same-subpath>.md`, leaving a dated pointer. Rotation, not deletion; triage owns it, distill never archives.
 
 **Rule 2 - Every page earns its links.**
@@ -112,7 +112,7 @@ confidential: [slug, slug]  # empty, or your lenses from governance/confidential
 
 ## Operations
 
-**`ingest <paths, URLs, or pasted text>` (skill: wiki-ingest).** Land sources: mirror to raw/, source page, and append to `metadata/sources.jsonl` + `metadata/log.jsonl` (via `aios_ledger.py append-source` / `append-log`; a deny hook blocks raw edits). No entity/concept writes; `distilled:` stays empty. Every meeting capture lands verbatim in `raw/transcripts/` (gitignored); source pages are earned (full page vs an index ledger line for low-signal captures).
+**`ingest <paths, URLs, or pasted text>` (skill: wiki-ingest).** Land sources: mirror to raw/, source page, and append one row each to `metadata/sources.jsonl` and `metadata/log.jsonl` (append only, never rewrite a line). No entity/concept writes; `distilled:` stays empty. Every meeting capture lands verbatim in `raw/transcripts/` (gitignored); source pages are earned (full page vs an index ledger line for low-signal captures).
 
 **`distill [<source> ... | pending]` (skill: wiki-distill).** Mine undistilled source pages into `# Evidence` appends, one checkpoint with the owner before writing. Never touches `# Current truth` (Rule 6).
 
