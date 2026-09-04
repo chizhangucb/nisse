@@ -333,6 +333,29 @@ class TestFailures(WikiCheckTest):
         self.assertEqual(code, 1)
 
 
+class TestInlineComments(unittest.TestCase):
+    """Frontmatter scalars drop a trailing YAML comment, like real YAML."""
+
+    def test_hint_after_a_value_is_not_part_of_the_value(self):
+        self.assertEqual(wc.parse_scalar("work    # work | personal"), "work")
+
+    def test_hint_after_an_inline_list_is_dropped(self):
+        self.assertEqual(wc.parse_scalar("[ci_pipeline] # 3-5 slugs"),
+                         ["ci_pipeline"])
+
+    def test_a_hint_only_value_reads_as_empty(self):
+        self.assertEqual(wc.parse_scalar("   # work | personal"), "")
+
+    def test_a_url_fragment_survives(self):
+        # `origin:` is often a URL; its #fragment has no preceding space and
+        # is part of the value, not a comment.
+        self.assertEqual(wc.parse_scalar("https://example.com/a#frag"),
+                         "https://example.com/a#frag")
+
+    def test_a_hash_inside_quotes_survives(self):
+        self.assertEqual(wc.parse_scalar('"a # b"'), "a # b")
+
+
 class TestRealWiki(unittest.TestCase):
     """Run the checker over this repo's live wiki root and fail on any
     violation. This is the gate that keeps the real wiki schema-clean: the

@@ -73,13 +73,22 @@ class TestTemplates(unittest.TestCase):
                     out, [], "template %s has violations: %s"
                     % (name, [(v.rule, v.fix) for v in out]))
 
-    def test_scaffolds_are_not_page_validated_but_their_enums_are_checked(self):
-        # The two source scaffolds carry their option hints INLINE
-        # (`project:  # work | personal | ...`), and the frontmatter parser
-        # reads that comment as the value. So they cannot pass the page rules
-        # while the hints stay where a human filling one in wants them. What
-        # is checked instead: every enum a hint offers is one the checker
-        # actually accepts, so a hint can never teach a value that fails.
+    def test_scaffolds_validate_but_for_the_fields_ingest_fills(self):
+        # The two source scaffolds carry their option hints inline
+        # (`project:  # work | personal | ...`). The parser strips those as
+        # YAML comments, so they validate as pages like any other template.
+        # The one expected violation is a blank required field: ingest fills
+        # project/created/via/tags when it lands a source.
+        for name in sorted(SCAFFOLD_TEMPLATES):
+            with self.subTest(template=name):
+                out = [v for v in page_violations(name)
+                       if "required key is empty" not in v.fix]
+                self.assertEqual(
+                    out, [], "scaffold %s has unexpected violations: %s"
+                    % (name, [(v.rule, v.fix) for v in out]))
+
+    def test_scaffold_option_hints_offer_only_values_the_checker_accepts(self):
+        # A hint that teaches a rejected value is worse than no hint.
         for name in sorted(SCAFFOLD_TEMPLATES):
             with self.subTest(template=name):
                 with open(os.path.join(TEMPLATES, name), encoding="utf-8") as fh:

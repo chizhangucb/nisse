@@ -175,8 +175,36 @@ def split_top_level(inner):
     return [p for p in parts if p.strip() != ""]
 
 
+def strip_inline_comment(raw):
+    """Drop a trailing YAML comment from a scalar or inline list.
+
+    Real YAML treats ` # ...` outside quotes and brackets as a comment; this
+    hand-rolled parser did not, so a template writing its option hints inline
+
+        project:                # work | personal | health | life
+
+    read the whole hint as the value. Bracket and quote depth are tracked so a
+    `#tag_slug` inside a list or a quoted string survives.
+    """
+    out, depth, quote = [], 0, None
+    for i, ch in enumerate(raw):
+        if quote:
+            if ch == quote:
+                quote = None
+        elif ch in "\"'":
+            quote = ch
+        elif ch in "([":
+            depth += 1
+        elif ch in ")]":
+            depth = max(0, depth - 1)
+        elif ch == "#" and depth == 0 and (i == 0 or raw[i - 1].isspace()):
+            break
+        out.append(ch)
+    return "".join(out)
+
+
 def parse_scalar(raw):
-    raw = raw.strip()
+    raw = strip_inline_comment(raw).strip()
     if raw == "":
         return ""
     if raw.startswith("[") and raw.endswith("]"):
