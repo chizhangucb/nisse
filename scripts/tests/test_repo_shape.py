@@ -77,11 +77,13 @@ def tracked_toplevel():
 
 
 def tracked_under(folder):
+    """Every tracked path below `folder`, relative and nested ones included.
+
+    Nested, so a `context/notes/scratch.md` shows up as an extra rather than
+    slipping past a direct-children-only check.
+    """
     prefix = folder + "/"
-    return {
-        p[len(prefix):] for p in tracked_paths()
-        if p.startswith(prefix) and "/" not in p[len(prefix):]
-    }
+    return {p[len(prefix):] for p in tracked_paths() if p.startswith(prefix)}
 
 
 class TestRepoShape(unittest.TestCase):
@@ -127,7 +129,7 @@ class TestContextShape(unittest.TestCase):
         extra = actual - EXPECTED_CONTEXT
         missing = EXPECTED_CONTEXT - actual
         self.assertFalse(
-            extra, f"unexpected files under context/: {sorted(extra)}")
+            extra, f"unexpected paths under context/: {sorted(extra)}")
         self.assertFalse(
             missing, f"context templates missing: {sorted(missing)}")
 
