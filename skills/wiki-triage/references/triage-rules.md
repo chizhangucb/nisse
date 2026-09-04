@@ -12,7 +12,7 @@ Mechanical checks are the countable ones: orphans, page budgets, truth staleness
   | Promote | wiki-worthy now; hand to wiki-distill | today |
   | Keep | still maturing, stays queued (defers the decision) | empty |
   | Skip | reviewed, no wiki value, permanently | today + skip note |
-  | Retire | move to repo-root `archives/`; per-item explicit yes, never a bulk yes | today |
+  | Retire | move to `wiki/annex/`; per-item explicit yes, never a bulk yes | today |
 
   `triaged:` is set only when a decision was made.
 - **Evidence archival.** Living page over ~2,000 words: roll the oldest largely-folded Evidence (older than ~1 month, not inside an open block) to `wiki/annex/<same-subpath>.md` (`type: annex`, dates and cites kept), leaving a `> [!note]` pointer atop the live `# Evidence`, until under budget or nothing eligible remains. Nothing eligible: flag it, not fixed. Propose at checkpoint; distill never archives.

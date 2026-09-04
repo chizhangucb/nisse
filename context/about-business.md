@@ -2,6 +2,8 @@
 
 > Fill-in template. If your life isn't organized around a business, rename this to whatever is (about-research.md, about-practice.md) and keep the shape: what it is, where it stands, what winning looks like.
 
+**Last updated:** (date). Refresh when reality moves; if this is more than a quarter stale, say so.
+
 ## What it is
 
 (example) Acme Devtools: a CLI that turns flaky CI logs into reproducible bug reports. B2B, self-serve, priced per seat.

@@ -10,7 +10,7 @@ retrieval:              # full | partial
 storage: verbatim       # meetings are always verbatim; digest only if no transcript retrievable
 distilled:              # empty = awaiting wiki-distill; set to date when distilled
 class: primary
-confidential:           # empty, or a list of your lenses from governance/confidentiality.md, most sensitive first
+confidential:           # empty, or a list of your lenses from docs/confidentiality.md, most sensitive first
 participants: []
 context:                # internal | external
 meeting_type:           # 1:1 | team | leadership | customer | partner | vendor | investor | interview

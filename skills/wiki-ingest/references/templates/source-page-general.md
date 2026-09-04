@@ -9,7 +9,7 @@ via:                    # clipper | fetcher | paste
 retrieval:              # full | partial
 storage:                # verbatim | digest
 class:                  # primary | external
-confidential:           # empty, or a list of your lenses from governance/confidentiality.md
+confidential:           # empty, or a list of your lenses from docs/confidentiality.md
 distilled:              # empty = awaiting wiki-distill; set to date when distilled
 triaged:                # empty = still in the triage queue (brainstorms and clippings only)
 ---

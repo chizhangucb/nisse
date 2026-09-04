@@ -9,8 +9,8 @@ it. Verify-or-abort: the new transcript's garble score
 is written and the failure is reported visibly. A cost estimate is checked
 against the cap BEFORE any spend; over-cap refuses.
 
-Needs ASSEMBLYAI_API_KEY (env, then ~/.secrets/shared.env, then repo .env,
-per governance/secrets.md). Nothing else in the skeleton needs a key.
+Needs ASSEMBLYAI_API_KEY (env, then ~/.secrets/shared.env, then repo .env).
+Nothing else in the starter kit needs a key.
 
 API shapes (verify against assemblyai.com/docs if this script ever 4xx's;
 observed 2026-08): POST /v2/upload (raw bytes) -> upload_url;
