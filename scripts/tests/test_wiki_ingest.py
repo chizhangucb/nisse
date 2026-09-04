@@ -412,7 +412,7 @@ class PipelineTests(unittest.TestCase):
             "scorer": wi.load_quality_scorer(),
             "raw_dir": os.path.join(self.tmp, "raw"),
             "sources_dir": os.path.join(self.tmp, "sources"),
-            "hub": self.tmp,
+            "root": self.tmp,
             "template": wi.TEMPLATE,
             "today": "2026-07-31",
             "dry_run": False,
@@ -493,7 +493,7 @@ class PipelineTests(unittest.TestCase):
     def test_scaffold_exists_fails_before_raw_mirror(self):
         # a pre-existing source page must FAIL before the raw mirror is
         # written, or the mirror is orphaned with no index entry (raw/ immutable,
-        # so a retry clobber-guards forever). Same shape as 's tripwire.
+        # so a retry clobber-guards forever). Same shape as the index guard.
         slug = "2026-07-30_fixture_weekly_sync"
         with open(os.path.join(self.ctx["sources_dir"], f"{slug}.md"),
                   "w", encoding="utf-8") as f:
@@ -525,8 +525,8 @@ class PipelineTests(unittest.TestCase):
         # in-memory index_slugs set does not, so the SKIPPED short-circuit
         # doesn't catch it and control reaches the index guard.
         slug = "2026-07-30_fixture_weekly_sync"
-        wi.append_index_line(self.meeting, slug, self.ctx["hub"])
-        self.assertTrue(wi.index_carries_slug(slug, self.ctx["hub"]))
+        wi.append_index_line(self.meeting, slug, self.ctx["root"])
+        self.assertTrue(wi.index_carries_slug(slug, self.ctx["root"]))
         self.assertNotIn(slug, self.ctx["index_slugs"])
         rec = wi.land_meeting(self.meeting, self.ctx)
         self.assertEqual(rec["status"], "FAILED")
@@ -539,7 +539,7 @@ class PipelineTests(unittest.TestCase):
         # No mirror written on the index-guard FAIL, so a retry re-hits the same
         # clean index-guard FAIL, never a clobber guard on an orphaned mirror.
         slug = "2026-07-30_fixture_weekly_sync"
-        wi.append_index_line(self.meeting, slug, self.ctx["hub"])
+        wi.append_index_line(self.meeting, slug, self.ctx["root"])
         first = wi.land_meeting(self.meeting, self.ctx)
         second = wi.land_meeting(self.meeting, self.ctx)
         self.assertEqual(first["status"], "FAILED")

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mechanical write step for wiki-distill (Phase 1, lever 2).
+"""Mechanical write step for wiki-distill.
 
 Today, after the owner approves a distill checkpoint package, the agent hand-edits
 every touched page: inserts evidence bullets, fills each source's

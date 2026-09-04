@@ -140,7 +140,7 @@ def parse_ev_region(ev_region):
     Every `> [!note]` archived-evidence pointer is regenerable scaffolding: they
     are captured (first one returned) and stripped from the block list, wherever
     they sit -- top OR stranded mid-Evidence after a prior partial archival (the
-    stale-mid-pointer case calls out). Remaining blocks are bullets
+    stale-mid-pointer case). Remaining blocks are bullets
     (`- YYYY-MM-DD | ...`, with continuations) or protective `> [!warning]` /
     `> [!question]` callouts. Blank lines are dropped, re-inserted on render."""
     lines = ev_region.split("\n")

@@ -193,7 +193,7 @@ class TestConforming(WikiCheckTest):
 
 class TestFailures(WikiCheckTest):
     def test_project_personal_is_accepted(self):
-        # Issue #83: vocabulary is work | personal | health | life.
+        # Schema: vocabulary is work | personal | health | life.
         write(self.wiki, "sources/2026-08-18_pp.md",
               GOOD_SOURCE.replace("project: work", "project: personal"))
         self.assertEqual(self.run_checker(), [])

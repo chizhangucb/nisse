@@ -12,7 +12,7 @@ The schema requires these files be written ONLY through this module, by hand
 via the CLI or in-process by ingest and distill. Hand-editing a JSONL breaks
 the append contract below.
 
-Self-contained (stdlib only). The `hub` argument is the repo root that holds
+Self-contained (stdlib only). The `root` argument is the repo root that holds
 `wiki/`.
 
 Append contract: one writer at a time appends one whole encoded line via a
@@ -34,8 +34,8 @@ WIKI_SOURCES_JSONL = ("wiki", "metadata", "sources.jsonl")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
-def hub_path(hub, parts):
-    return os.path.join(hub, *parts)
+def root_path(root, parts):
+    return os.path.join(root, *parts)
 
 
 # ---------------------------------------------------------------------------
@@ -99,11 +99,11 @@ def read_rows(path):
 # Wiki log (append-only)  row: {"date","op","detail"}
 # ===========================================================================
 
-def read_wiki_log(hub):
-    return read_rows(hub_path(hub, WIKI_LOG_JSONL))
+def read_wiki_log(root):
+    return read_rows(root_path(root, WIKI_LOG_JSONL))
 
 
-def append_wiki_log(hub, *, date, op, detail, fsync=False):
+def append_wiki_log(root, *, date, op, detail, fsync=False):
     """Append one wiki-log row. Returns (True, None) or (False, reason)."""
     if not DATE_RE.match(date or ""):
         return False, f"bad date {date!r}"
@@ -114,7 +114,7 @@ def append_wiki_log(hub, *, date, op, detail, fsync=False):
     if not detail:
         return False, "empty detail"
     row = {"date": date, "op": op, "detail": detail}
-    _append_line(hub_path(hub, WIKI_LOG_JSONL), _dumps(row), fsync=fsync)
+    _append_line(root_path(root, WIKI_LOG_JSONL), _dumps(row), fsync=fsync)
     return True, None
 
 
@@ -127,11 +127,11 @@ def append_wiki_log(hub, *, date, op, detail, fsync=False):
 # the same formatted line plus month + slug; readers can re-parse `raw` if they
 # need fields.
 
-def read_wiki_sources(hub):
-    return read_rows(hub_path(hub, WIKI_SOURCES_JSONL))
+def read_wiki_sources(root):
+    return read_rows(root_path(root, WIKI_SOURCES_JSONL))
 
 
-def append_wiki_source(hub, *, month, slug, raw, fsync=False):
+def append_wiki_source(root, *, month, slug, raw, fsync=False):
     """Append one source row. `raw` is the full line minus the leading '- '.
     Returns (True, None) or (False, reason)."""
     if not re.match(r"^\d{4}-\d{2}$", month or ""):
@@ -140,7 +140,7 @@ def append_wiki_source(hub, *, month, slug, raw, fsync=False):
     if not raw:
         return False, "empty raw line"
     row = {"month": month, "slug": (slug or "").strip(), "raw": raw}
-    _append_line(hub_path(hub, WIKI_SOURCES_JSONL), _dumps(row), fsync=fsync)
+    _append_line(root_path(root, WIKI_SOURCES_JSONL), _dumps(row), fsync=fsync)
     return True, None
 
 

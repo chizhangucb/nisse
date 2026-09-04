@@ -373,11 +373,11 @@ def _dedupe_within_source(meetings, strict=True):
 _INDEX_SLUG = re.compile(r"^-\s+(?:\[\[)?(\d{4}-\d{2}-\d{2})_([a-z0-9_]+)")
 
 
-def read_index_slugs(hub=REPO):
+def read_index_slugs(root=REPO):
     """Return (full slugs, dateless slug -> count, reprocess candidates).
 
-    Reads wiki/metadata/sources.jsonl (was the monthly sources-*.md
-    shards + index.md). Rows are deduped by slug keeping the LAST occurrence:
+    Reads wiki/metadata/sources.jsonl. Rows are deduped by slug keeping the
+    LAST occurrence:
     an append-log carries a reprocess's fresh row after its earlier garble row,
     and the latest row is the current state.
 
@@ -388,7 +388,7 @@ def read_index_slugs(hub=REPO):
     already-recovered source (recovered lines still say "garbled slug").
     """
     latest = {}  # slug -> raw line body (last wins)
-    for row in wiki_ledger.read_wiki_sources(hub):
+    for row in wiki_ledger.read_wiki_sources(root):
         slug = (row.get("slug") or "").strip()
         raw = row.get("raw") or ""
         if not slug:
@@ -694,23 +694,21 @@ def _index_slug_re(slug):
     return rf"^-\s+(?:\[\[)?{re.escape(slug)}\b"
 
 
-def index_carries_slug(slug, hub=REPO):
-    """Read-only probe: does sources.jsonl already carry `slug`? (, was
-    a per-shard regex probe.)
+def index_carries_slug(slug, root=REPO):
+    """Read-only probe: does sources.jsonl already carry `slug`?
 
     A True here means `append_index_line(..., replace=False)` would raise
     ClobberError. Lets land_meeting run the index guard *before* the raw mirror
     is written, so a clobber never orphans a mirror.
     """
-    for row in wiki_ledger.read_wiki_sources(hub):
+    for row in wiki_ledger.read_wiki_sources(root):
         if (row.get("slug") or "").strip() == slug:
             return True
     return False
 
 
-def append_index_line(meeting, slug, hub=REPO, dry_run=False, replace=False):
-    """Append the source line to wiki/metadata/sources.jsonl (was a
-    newest-first insert into a monthly shard).
+def append_index_line(meeting, slug, root=REPO, dry_run=False, replace=False):
+    """Append the source line to wiki/metadata/sources.jsonl.
 
     An already-present slug is a hard stop: the sources log is the ingest ledger
     and a second row for the same meeting would be a silent double ingest.
@@ -719,11 +717,11 @@ def append_index_line(meeting, slug, hub=REPO, dry_run=False, replace=False):
     latest, so the fresh row is the current state.
     """
     line = index_line(meeting, slug)
-    if index_carries_slug(slug, hub) and not replace:
+    if index_carries_slug(slug, root) and not replace:
         raise ClobberError(f"sources.jsonl already carries {slug}")
     if not dry_run:
         ok, why = wiki_ledger.append_wiki_source(
-            hub, month=meeting.date[:7], slug=slug, raw=line[len("- "):])
+            root, month=meeting.date[:7], slug=slug, raw=line[len("- "):])
         if not ok:
             raise ClobberError(f"sources append refused for {slug}: {why}")
     return line
@@ -735,13 +733,13 @@ def log_line(meeting, slug, today=None):
             "scaffold pending judgment half")
 
 
-def append_log_line(meeting, slug, hub=REPO, dry_run=False, today=None):
+def append_log_line(meeting, slug, root=REPO, dry_run=False, today=None):
     today = today or dt.date.today().isoformat()
     line = log_line(meeting, slug, today)
     if not dry_run:
         detail = (f"[[{slug}]] landed via {meeting.source}; "
                   "scaffold pending judgment half")
-        wiki_ledger.append_wiki_log(hub, date=today, op="ingest", detail=detail)
+        wiki_ledger.append_wiki_log(root, date=today, op="ingest", detail=detail)
     return line
 
 
@@ -876,7 +874,7 @@ def land_meeting(meeting, ctx):
     rec["notes"] += [f"tripwire WARN {c.name}: {c.detail}"
                      for c in checks if c.status == "WARN"]
 
-    # two guards downstream share 's failure shape. Each can
+    # The two guards downstream share one failure shape. Each can
     # FAIL *after* the raw mirror is written, orphaning the mirror with no
     # index entry (raw/ is immutable, so a retry clobber-guards forever). Run
     # both as read-only pre-checks here, before write_raw_mirror(), so a FAIL
@@ -887,7 +885,7 @@ def land_meeting(meeting, ctx):
         rec["notes"].append("source page already exists: "
                             f"{rec['scaffold_path']}")
         return rec
-    if not reprocessing and index_carries_slug(slug, ctx["hub"]):
+    if not reprocessing and index_carries_slug(slug, ctx["root"]):
         rec["status"] = "FAILED"
         rec["notes"].append(f"index guard: sources.jsonl already carries {slug}")
         return rec
@@ -926,14 +924,14 @@ def land_meeting(meeting, ctx):
         rec["scaffold"] = scaffold
 
     try:
-        rec["index_line"] = append_index_line(meeting, slug, ctx["hub"],
+        rec["index_line"] = append_index_line(meeting, slug, ctx["root"],
                                               dry_run=ctx["dry_run"],
                                               replace=reprocessing)
     except ClobberError as exc:
         rec["status"] = "FAILED"
         rec["notes"].append(f"index guard: {exc}")
         return rec
-    rec["log_line"] = append_log_line(meeting, slug, ctx["hub"],
+    rec["log_line"] = append_log_line(meeting, slug, ctx["root"],
                                       dry_run=ctx["dry_run"], today=ctx["today"])
     ctx["index_slugs"].add(slug)
     return rec
@@ -952,8 +950,9 @@ def build_context(args, run_checks, retranscribe=None):
         "scorer": load_quality_scorer(),
         "raw_dir": RAW_DIR,
         "sources_dir": SOURCES_DIR,
-        "hub": REPO,
         "template": TEMPLATE,
+        # One key for the repo root. Upstream carried "hub" and "root" side by
+        # side with the same value; they were always the same thing.
         "root": REPO,
         "today": dt.date.today().isoformat(),
         "dry_run": args.dry_run,

@@ -5,7 +5,7 @@ project:                # work | personal | health | life
 created:
 ingested:
 origin:                 # URL or raw/ file path
-via:                    # obsidian-clipper | parallel | webfetch | paste
+via:                    # clipper | fetcher | paste | drive_export | gmail
 retrieval:              # full | partial | excerpts
 storage:                # verbatim | digest
 class:                  # primary | external
