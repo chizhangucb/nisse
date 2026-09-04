@@ -1,9 +1,0 @@
-{
-  "_comment": "Copy to confidential_markers.json. Case-insensitive regexes distilled from your governance/confidentiality.md never-list. A hit in outbound content hard-blocks; keep the list current or the scan is theater. Examples below are placeholders.",
-  "markers": [
-    "secret-project-codename",
-    "\\bproject[- ]sunrise\\b",
-    "-----BEGIN (RSA|OPENSSH|EC) PRIVATE KEY-----",
-    "sk-[A-Za-z0-9]{20,}"
-  ]
-}
